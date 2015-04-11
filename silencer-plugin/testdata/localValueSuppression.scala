@@ -1,4 +1,4 @@
-import rjghik.silencer.silent
+import com.github.ghik.silencer.silent
 
 object localValueSuppression {
   def method(): Unit = {

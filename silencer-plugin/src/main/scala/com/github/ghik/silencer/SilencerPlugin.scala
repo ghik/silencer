@@ -1,4 +1,4 @@
-package rjghik.silencer
+package com.github.ghik.silencer
 
 import scala.reflect.internal.util.Position
 import scala.tools.nsc.plugins.{Plugin, PluginComponent}

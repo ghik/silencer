@@ -1,4 +1,4 @@
-package rjghik.silencer
+package com.github.ghik.silencer
 
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer

@@ -1,6 +1,6 @@
 package testdata
 
-import rjghik.silencer.silent
+import com.github.ghik.silencer.silent
 
 @silent
 object classSuppression {

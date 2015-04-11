@@ -1,6 +1,6 @@
 (name in Global) := "silencer"
 
-(organization in Global) := "rjghik"
+(organization in Global) := "com.github.ghik"
 
 (version in Global) := "0.1"
 

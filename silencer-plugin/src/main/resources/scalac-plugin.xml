@@ -1,4 +1,4 @@
 <plugin>
   <name>silencer</name>
-  <classname>rjghik.silencer.SilencerPlugin</classname>
+  <classname>com.github.ghik.silencer.SilencerPlugin</classname>
 </plugin>
