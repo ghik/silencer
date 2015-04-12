@@ -32,30 +32,18 @@ class SilencerPluginTest extends FunSuite {
     assert(count === reporter.warningCount)
   }
 
-  test("no suppression") {
-    compile("unsuppressed.scala")
-    assertWarnings(1)
+  def testFile(filename: String, expectedWarnings: Int = 0): Unit = {
+    test(filename) {
+      compile(filename)
+      assertWarnings(expectedWarnings)
+    }
   }
 
-  test("statement suppression") {
-    compile("statementSuppression.scala")
-    assertWarnings(0)
-  }
-
-  test("local value suppression") {
-    compile("localValueSuppression.scala")
-    assertWarnings(0)
-  }
-
-  test("method suppression") {
-    compile("methodSuppression.scala")
-    assertWarnings(0)
-  }
-
-  test("class suppression") {
-    compile("classSuppression.scala")
-    assertWarnings(0)
-  }
+  testFile("unsuppressed.scala", 1)
+  testFile("statementSuppression.scala")
+  testFile("localValueSuppression.scala")
+  testFile("methodSuppression.scala")
+  testFile("classSuppression.scala")
 
   test("multiple files compilation") {
     compile(new File("testdata").listFiles().map(_.getName): _*)
