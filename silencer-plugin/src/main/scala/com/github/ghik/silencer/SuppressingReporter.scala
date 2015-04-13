@@ -14,6 +14,7 @@ class SuppressingReporter(original: Reporter) extends Reporter {
     for ((pos, msg) <- deferredWarnings.remove(source).getOrElse(Seq.empty) if !ranges.exists(_.includes(pos))) {
       original.warning(pos, msg)
     }
+    updateCounts()
   }
 
   override def reset() {
@@ -29,10 +30,10 @@ class SuppressingReporter(original: Reporter) extends Reporter {
         original.info(pos, msg, force)
       case WARNING if !suppressedRanges.contains(pos.source) =>
         deferredWarnings.getOrElseUpdate(pos.source, new ArrayBuffer) += ((pos, msg))
-      case WARNING if !suppressedRanges(pos.source).exists(_.includes(pos)) =>
-        original.warning(pos, msg)
-      case WARNING =>
+      case WARNING if suppressedRanges(pos.source).exists(_.includes(pos)) =>
         ()
+      case WARNING =>
+        original.warning(pos, msg)
       case ERROR => original.error(pos, msg)
     }
     updateCounts()
