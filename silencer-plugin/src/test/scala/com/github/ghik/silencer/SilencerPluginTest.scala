@@ -4,6 +4,7 @@ import java.io.File
 
 import org.scalatest.FunSuite
 
+import scala.io.Source
 import scala.reflect.io.VirtualDirectory
 import scala.tools.nsc.reporters.ConsoleReporter
 import scala.tools.nsc.{Global, Settings}
@@ -11,8 +12,16 @@ import scala.tools.nsc.{Global, Settings}
 class SilencerPluginTest extends FunSuite {
   suite =>
 
+  val testdata = "silencer-plugin/testdata/"
   val settings = new Settings
-  settings.usejavacp.value = true
+
+  Option(getClass.getResourceAsStream("/embeddedcp")) match {
+    case Some(is) =>
+      Source.fromInputStream(is).getLines().foreach(settings.classpath.append)
+    case None =>
+      settings.usejavacp.value = true
+  }
+
   // avoid saving classfiles to disk
   settings.outputDirs.setSingleOutput(new VirtualDirectory("(memory)", None))
   val reporter = new ConsoleReporter(settings)
@@ -24,7 +33,7 @@ class SilencerPluginTest extends FunSuite {
 
   def compile(filenames: String*): Unit = {
     val run = new global.Run
-    run.compile(filenames.toList.map("testdata/" + _))
+    run.compile(filenames.toList.map(testdata + _))
   }
 
   def assertWarnings(count: Int): Unit = {
@@ -46,7 +55,7 @@ class SilencerPluginTest extends FunSuite {
   testFile("classSuppression.scala")
 
   test("multiple files compilation") {
-    compile(new File("testdata").listFiles().map(_.getName): _*)
+    compile(new File(testdata).listFiles().map(_.getName): _*)
     assertWarnings(1)
   }
 
