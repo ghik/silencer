@@ -1,6 +1,6 @@
 ## Scala compiler plugin for annotation-based warning suppression
 
-Scala has no way of warning suppression, which actually hurts more than helps you if you want to have some reasonable policy on warnings in your Scala codebase. See e.g. [this ticket](https://issues.scala-lang.org/browse/SI-1781) for more discussion. The immediate goal of author of this plugin is to be able to turn on `-Xfatal-warnings` option in Scala compiler and enforce zero-warning policy but still be able to consciously silent out warnings in specific code portions which would otherwise be a noise.
+In Scala, it is generally not possible to suppress warnings locally. This actually hurts more than helps you if you want to have some reasonable policy on warnings in your Scala codebase. See e.g. [this ticket](https://issues.scala-lang.org/browse/SI-1781) for more discussion. This plugin aims to change the situation. The direct motivation for this plugin is to be able to turn on `-Xfatal-warnings` option in Scala compiler and enforce zero-warning policy but still be able to consciously silent out warnings in specific code portions which would otherwise be a noise.
 
 ### Usage
 
