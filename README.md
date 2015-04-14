@@ -4,7 +4,15 @@ Scala has no way of warning suppression, which actually hurts more than helps yo
 
 ### Usage
 
-With the plugin, warnings can be silenced using the `@com.github.ghik.silencer.silent` annotation. It can be applied on a single statement or expression, entire `def`/`val`/`var` definition or entire `class`/`object`/`trait` definition.
+If you're using SBT, simply add these lines to your `build.sbt` to enable the plugin:
+
+    addCompilerPlugin("com.github.ghik" % "silencer-plugin" % "0.2")
+    
+    libraryDependencies += "com.github.ghik" % "silencer-lib" % "0.2"
+    
+Scala 2.11.4 or newer is required.
+
+With the plugin enabled, warnings can be silenced using the `@com.github.ghik.silencer.silent` annotation. It can be applied on a single statement or expression, entire `def`/`val`/`var` definition or entire `class`/`object`/`trait` definition.
 
     import com.github.ghik.silencer.silent
 
