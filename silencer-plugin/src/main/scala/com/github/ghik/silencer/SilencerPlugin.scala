@@ -32,7 +32,7 @@ class SilencerPlugin(val global: Global) extends Plugin {
 
       val suppressedTrees = unit.body.collect {
         case Annotated(annot, tree) if isSilentAnnot(annot) => tree
-        case Typed(tree, tpt) if tpt.tpe.annotations.exists(ai => isSilentAnnot(ai.tree)) => tree
+        case typed@Typed(tree, tpt) if tpt.tpe.annotations.exists(ai => isSilentAnnot(ai.tree)) => typed
         case md: MemberDef if md.symbol.annotations.exists(ai => isSilentAnnot(ai.tree)) => md
       }
 
