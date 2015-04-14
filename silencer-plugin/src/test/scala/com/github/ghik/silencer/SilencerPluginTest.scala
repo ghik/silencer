@@ -50,20 +50,24 @@ class SilencerPluginTest extends FunSuite {
     testFile("unsuppressed.scala", 1)
   }
   test("statement suppression") {
-    testFile("statementSuppression.scala")
+    testFile("statementSuppression.scala", 1)
   }
   test("local value suppression") {
-    testFile("localValueSuppression.scala")
+    testFile("localValueSuppression.scala", 1)
   }
   test("method suppression") {
-    testFile("methodSuppression.scala")
+    testFile("methodSuppression.scala", 1)
   }
   test("class suppression") {
-    testFile("classSuppression.scala")
+    testFile("classSuppression.scala", 1)
+  }
+  test("late warning") {
+    testFile("lateWarning.scala", 1)
   }
   test("multiple files compilation") {
-    compile(new File(testdata).listFiles().map(_.getName): _*)
-    assertWarnings(1)
+    val files = new File(testdata).listFiles().map(_.getName)
+    compile(files: _*)
+    assertWarnings(files.length)
   }
 
 }

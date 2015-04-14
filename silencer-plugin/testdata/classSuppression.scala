@@ -2,9 +2,18 @@ package testdata
 
 import com.github.ghik.silencer.silent
 
-@silent
+
 object classSuppression {
-  def method(): Unit = {
-    123
+  @silent
+  class suppressed {
+    def method(): Unit = {
+      123
+    }
   }
+  class notSuppressed {
+    def method(): Unit = {
+      123
+    }
+  }
+
 }

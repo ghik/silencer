@@ -5,7 +5,11 @@ object localValueSuppression {
     @silent
     val stuff = {
       123
-      543
+      ()
+    }
+    val other = {
+      123
+      ()
     }
   }
 }

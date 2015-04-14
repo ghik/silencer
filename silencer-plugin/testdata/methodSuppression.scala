@@ -7,4 +7,7 @@ object methodSuppression {
   def method(): Unit = {
     123
   }
+  def other(): Unit = {
+    123
+  }
 }
