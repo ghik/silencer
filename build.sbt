@@ -6,8 +6,8 @@ val saveTestClasspath = taskKey[File](
 
 val commonSettings = Seq(
   organization := "com.github.ghik",
-  version := "0.2",
-  scalaVersion := "2.11.6",
+  version := "0.3",
+  scalaVersion := "2.11.7",
   crossPaths := false,
   projectInfo := ModuleInfo(
     nameFormal = "Silencer",
@@ -52,7 +52,7 @@ lazy val silencer = (project in file(".")).aggregate(`silencer-lib`, `silencer-p
   .settings(commonSettings: _*)
   .settings(
     publishArtifact := false,
-    PgpKeys.publishSigned := ()
+    PgpKeys.publishSigned :=()
   )
 
 lazy val `silencer-lib` = project
