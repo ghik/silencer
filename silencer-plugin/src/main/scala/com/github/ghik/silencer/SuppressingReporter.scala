@@ -51,6 +51,12 @@ class SuppressingReporter(original: Reporter) extends Reporter {
     case ERROR => original.ERROR
   }
 
+  override def hasErrors: Boolean =
+    original.hasErrors || cancelled
+
+  override def hasWarnings: Boolean =
+    original.hasWarnings
+
   override def resetCount(severity: Severity) = {
     super.resetCount(severity)
     original.resetCount(originalSeverity(severity))
