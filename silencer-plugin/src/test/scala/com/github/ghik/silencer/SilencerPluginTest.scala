@@ -5,8 +5,10 @@ import java.io.File
 import org.scalatest.FunSuite
 
 import scala.io.Source
+import scala.reflect.internal.util.AbstractFileClassLoader
 import scala.reflect.io.VirtualDirectory
 import scala.tools.nsc.reporters.ConsoleReporter
+import scala.tools.nsc.typechecker.Analyzer
 import scala.tools.nsc.{Global, Settings}
 
 class SilencerPluginTest extends FunSuite {
@@ -23,12 +25,20 @@ class SilencerPluginTest extends FunSuite {
   }
 
   // avoid saving classfiles to disk
-  settings.outputDirs.setSingleOutput(new VirtualDirectory("(memory)", None))
+  val outDir = new VirtualDirectory("(memory)", None)
+  settings.outputDirs.setSingleOutput(outDir)
   val reporter = new ConsoleReporter(settings)
 
-  val global = new Global(settings, reporter) {
+  val global = new Global(settings, reporter) { g =>
     override protected def loadRoughPluginsList() =
       new SilencerPlugin(this) :: super.loadRoughPluginsList()
+
+    override lazy val analyzer = new {
+      val global: g.type = g
+    } with Analyzer {
+      override protected def findMacroClassLoader(): ClassLoader =
+        new AbstractFileClassLoader(outDir, ClassLoader.getSystemClassLoader)
+    }
   }
 
   def compile(filenames: String*): Unit = {
@@ -63,6 +73,10 @@ class SilencerPluginTest extends FunSuite {
   }
   test("late warning") {
     testFile("lateWarning.scala", 1)
+  }
+  test("macro expandee") {
+    compile("deps/utilMacros.scala")
+    testFile("macroExpandeeSuppression.scala", 1)
   }
   test("multiple files compilation") {
     val files = new File(testdata).listFiles().map(_.getName)
