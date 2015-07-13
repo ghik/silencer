@@ -6,9 +6,9 @@ In Scala, it is generally not possible to suppress warnings locally. This actual
 
 If you're using SBT, simply add these lines to your `build.sbt` to enable the plugin:
 
-    addCompilerPlugin("com.github.ghik" % "silencer-plugin" % "0.2")
+    addCompilerPlugin("com.github.ghik" % "silencer-plugin" % "0.3")
     
-    libraryDependencies += "com.github.ghik" % "silencer-lib" % "0.2"
+    libraryDependencies += "com.github.ghik" % "silencer-lib" % "0.3"
     
 Scala 2.11.4 or newer is required.
 
