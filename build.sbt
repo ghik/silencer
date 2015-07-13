@@ -70,6 +70,8 @@ lazy val `silencer-plugin` = project.dependsOn(`silencer-lib`)
       IO.write(result, (fullClasspath in Test).value.map(_.data.getAbsolutePath).mkString("\n"))
       result
     },
-    (test in Test) <<= (test in Test) dependsOn saveTestClasspath
+    (test in Test) <<= (test in Test) dependsOn saveTestClasspath,
+    fork in Test := true,
+    baseDirectory in Test := (baseDirectory in ThisBuild).value
   )
 

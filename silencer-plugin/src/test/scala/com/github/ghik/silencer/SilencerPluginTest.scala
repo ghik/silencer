@@ -79,7 +79,8 @@ class SilencerPluginTest extends FunSuite {
     testFile("macroExpandeeSuppression.scala", 1)
   }
   test("multiple files compilation") {
-    val files = new File(testdata).listFiles().map(_.getName)
+    compile("deps/utilMacros.scala")
+    val files = new File(testdata).listFiles().filter(_.isFile).map(_.getName)
     compile(files: _*)
     assertWarnings(files.length)
   }
