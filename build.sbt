@@ -6,8 +6,8 @@ val saveTestClasspath = taskKey[File](
 
 val commonSettings = Seq(
   organization := "com.github.ghik",
-  version := "0.3",
-  scalaVersion := "2.11.7",
+  version := "0.4",
+  scalaVersion := "2.11.8",
   crossPaths := false,
   projectInfo := ModuleInfo(
     nameFormal = "Silencer",
