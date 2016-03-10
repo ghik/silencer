@@ -27,5 +27,5 @@ The `@silent` annotation suppresses *all* warnings in some code fragment. There 
 
 ### Status
 
-Proof of concept and more or less a hack on the compiler.
+Originally developed as a proof of concept and more or less a hack on the compiler, but it's being used in [AVSystem](https://github.com/AVSystem]) projects and has not caused any problems so far.
 
