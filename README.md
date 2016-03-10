@@ -13,7 +13,7 @@ If you're using SBT, simply add these lines to your `build.sbt` to enable the pl
     
     libraryDependencies += "com.github.ghik" % "silencer-lib" % "0.3"
     
-Scala 2.11.4 or newer is required.
+Scala 2.11.4 or newer is required. Not yet tested on 2.12.x
 
 With the plugin enabled, warnings can be silenced using the `@com.github.ghik.silencer.silent` annotation. It can be applied on a single statement or expression, entire `def`/`val`/`var` definition or entire `class`/`object`/`trait` definition.
 
