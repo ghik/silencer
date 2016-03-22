@@ -3,7 +3,7 @@
 [![Build Status](https://travis-ci.org/ghik/silencer.svg?branch=master)](https://travis-ci.org/ghik/silencer)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.ghik/silencer-plugin/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.github.ghik/silencer-plugin)
 
-In Scala, it is generally not possible to suppress warnings locally. This actually hurts more than helps you if you want to have some reasonable policy on warnings in your Scala codebase. See e.g. [this ticket](https://issues.scala-lang.org/browse/SI-1781) for more discussion. This plugin aims to change the situation. The direct motivation for this plugin is to be able to turn on `-Xfatal-warnings` option in Scala compiler and enforce zero-warning policy but still be able to consciously silent out warnings in specific code portions which would otherwise be a noise.
+Scala has no local warning suppression (see e.g. [SI-1781](https://issues.scala-lang.org/browse/SI-1781) for discussion). This plugin aims to change the situation. The direct motivation for this plugin is to be able to turn on `-Xfatal-warnings` option in Scala compiler and enforce zero-warning policy but still be able to consciously silent out warnings which would otherwise be a pointless noise.
 
 ### Usage
 
