@@ -8,7 +8,8 @@ val commonSettings = Seq(
   organization := "com.github.ghik",
   version := "0.4",
   scalaVersion := "2.11.8",
-  crossPaths := false,
+  crossScalaVersions := Seq("2.11.8", "2.12.0-M5"),
+  crossPaths := true,
   projectInfo := ModuleInfo(
     nameFormal = "Silencer",
     description = "Scala compiler plugin for annotation-based warning suppression",
@@ -63,7 +64,7 @@ lazy val `silencer-plugin` = project.dependsOn(`silencer-lib`)
   .settings(
     libraryDependencies ++= Seq(
       "org.scala-lang" % "scala-compiler" % scalaVersion.value,
-      "org.scalatest" %% "scalatest" % "2.2.4" % "test"
+      "org.scalatest" %% "scalatest" % "3.0.0-RC4" % "test"
     ),
     saveTestClasspath := {
       val result = (classDirectory in Test).value / "embeddedcp"
