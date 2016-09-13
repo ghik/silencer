@@ -16,6 +16,7 @@ class SilencerPluginTest extends FunSuite {
 
   val testdata = "silencer-plugin/testdata/"
   val settings = new Settings
+  settings.deprecation.value = true
 
   Option(getClass.getResourceAsStream("/embeddedcp")) match {
     case Some(is) =>

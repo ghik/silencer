@@ -3,8 +3,10 @@ package testdata
 import com.github.ghik.silencer.silent
 
 object statementSuppression {
+  @deprecated("don't", "0.0") def depreMethod(): Unit = ()
+
   def method(): Unit = {
-    123: @silent
-    123
+    depreMethod(): @silent
+    depreMethod()
   }
 }
