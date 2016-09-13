@@ -1,7 +1,7 @@
 ## Scala compiler plugin for annotation-based warning suppression
 
 [![Build Status](https://travis-ci.org/ghik/silencer.svg?branch=master)](https://travis-ci.org/ghik/silencer)
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.ghik/silencer-plugin/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.github.ghik/silencer-plugin)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.ghik/silencer-plugin_2.11/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.github.ghik/silencer-plugin_2.11)
 
 Scala has no local warning suppression (see e.g. [SI-1781](https://issues.scala-lang.org/browse/SI-1781) for discussion). This plugin aims to change the situation. The direct motivation for this plugin is to be able to turn on `-Xfatal-warnings` option in Scala compiler and enforce zero-warning policy but still be able to consciously silent out warnings which would otherwise be a pointless noise.
 
@@ -9,11 +9,11 @@ Scala has no local warning suppression (see e.g. [SI-1781](https://issues.scala-
 
 If you're using SBT, simply add these lines to your `build.sbt` to enable the plugin:
 
-    addCompilerPlugin("com.github.ghik" % "silencer-plugin" % "0.4")
+    addCompilerPlugin("com.github.ghik" %% "silencer-plugin" % "0.5")
     
-    libraryDependencies += "com.github.ghik" % "silencer-lib" % "0.4"
+    libraryDependencies += "com.github.ghik" %% "silencer-lib" % "0.5"
     
-Scala 2.11.4 or newer is required. Not yet tested on 2.12.x
+Scala 2.11.4 or newer is required. Also tested on 2.12.0-RC1.
 
 With the plugin enabled, warnings can be silenced using the `@com.github.ghik.silencer.silent` annotation. It can be applied on a single statement or expression, entire `def`/`val`/`var` definition or entire `class`/`object`/`trait` definition.
 
