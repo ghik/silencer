@@ -13,7 +13,7 @@ If you're using SBT, simply add these lines to your `build.sbt` to enable the pl
     
     libraryDependencies += "com.github.ghik" %% "silencer-lib" % "0.5"
     
-Silencer works with Scala 2.11.4+ and 2.12.0+.
+Silencer works with Scala 2.11.4+ and 2.12.0+. Also note that since both `silencer-plugin` and `silencer-lib` are compile time only dependencies, Silencer can also be used in ScalaJS without having to be cross compiled for it.
 
 With the plugin enabled, warnings can be silenced using the `@com.github.ghik.silencer.silent` annotation. It can be applied on a single statement or expression, entire `def`/`val`/`var` definition or entire `class`/`object`/`trait` definition.
 
