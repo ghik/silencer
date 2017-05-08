@@ -3,7 +3,7 @@ import com.github.ghik.silencer.silent
 import scala.language.experimental.macros
 
 object macroExpandeeSuppression {
-  def discard(expr: Any): Unit = macro utilMacros.discard
+  def discard(expr: Any): Unit = macro com.github.ghik.silencer.MacroImpls.discard
 
   discard {
     123: Unit
