@@ -14,7 +14,9 @@ val commonSettings = Seq(
     description = "Scala compiler plugin for annotation-based warning suppression",
     homepage = Some(url("https://github.com/ghik/silencer")),
     startYear = Some(2015),
-    licenses = Vector("The Apache License, Version 2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0.txt")),
+    licenses = Vector(
+      "The Apache License, Version 2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0.txt")
+    ),
     organizationName = "ghik",
     organizationHomepage = Some(url("https://github.com/ghik")),
     scmInfo = Some(ScmInfo(
@@ -22,7 +24,9 @@ val commonSettings = Seq(
       connection = "scm:git:git@github.com:ghik/silencer.git",
       devConnection = Some("scm:git:git@github.com:ghik/silencer.git")
     )),
-    developers = Vector.empty
+    developers = Vector(
+      Developer("ghik", "Roman Janusz", "romeqjanoosh@gmail.com", url("https://github.com/ghik"))
+    ),
   )
 )
 
@@ -36,15 +40,6 @@ val subprojectSettings = commonSettings ++ Seq(
       Some("releases" at nexus + "service/local/staging/deploy/maven2")
   },
   pomIncludeRepository := { _ => false },
-  pomExtra := {
-    <developers>
-      <developer>
-        <id>ghik</id>
-        <name>Roman Janusz</name>
-        <url>https://github.com/ghik</url>
-      </developer>
-    </developers>
-  }
 )
 
 lazy val silencer = (project in file(".")).aggregate(`silencer-lib`, `silencer-plugin`)
@@ -71,5 +66,5 @@ lazy val `silencer-plugin` = project.dependsOn(`silencer-lib`)
     },
     (test in Test) := (test in Test).dependsOn(saveTestClasspath).value,
     fork in Test := true,
-    baseDirectory in Test := (baseDirectory in ThisBuild).value
+    baseDirectory in Test := (baseDirectory in ThisBuild).value,
   )
