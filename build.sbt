@@ -14,6 +14,7 @@ val commonSettings = Seq(
     description = "Scala compiler plugin for annotation-based warning suppression",
     homepage = Some(url("https://github.com/ghik/silencer")),
     startYear = Some(2015),
+    licenses = Vector("The Apache License, Version 2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0.txt")),
     organizationName = "ghik",
     organizationHomepage = Some(url("https://github.com/ghik")),
     scmInfo = Some(ScmInfo(
@@ -21,9 +22,7 @@ val commonSettings = Seq(
       connection = "scm:git:git@github.com:ghik/silencer.git",
       devConnection = Some("scm:git:git@github.com:ghik/silencer.git")
     )),
-    licenses = Seq(
-      ("The Apache License, Version 2.0", url("http://www.apache.org/licenses/LICENSE-2.0.txt"))
-    )
+    developers = Vector.empty
   )
 )
 
@@ -52,7 +51,7 @@ lazy val silencer = (project in file(".")).aggregate(`silencer-lib`, `silencer-p
   .settings(commonSettings: _*)
   .settings(
     publishArtifact := false,
-    PgpKeys.publishSigned :=()
+    PgpKeys.publishSigned := {}
   )
 
 lazy val `silencer-lib` = project
