@@ -4,8 +4,7 @@ import scala.reflect.internal.util.Position
 import scala.tools.nsc.plugins.{Plugin, PluginComponent}
 import scala.tools.nsc.{Global, Phase}
 
-class SilencerPlugin(val global: Global) extends Plugin {
-  plugin =>
+class SilencerPlugin(val global: Global) extends Plugin { plugin =>
 
   val name = "SilencerPlugin"
   val description = "Scala compiler plugin for warning suppression"
@@ -28,12 +27,13 @@ class SilencerPlugin(val global: Global) extends Plugin {
 
     def applySuppressions(unit: CompilationUnit): Unit = {
       val silentAnnotType = typeOf[silent]
+
       def isSilentAnnot(tree: Tree) =
         tree.tpe != null && tree.tpe <:< silentAnnotType
 
       def suppressedTree(tree: Tree) = tree match {
         case Annotated(annot, arg) if isSilentAnnot(annot) => Some(arg)
-        case typed@Typed(expr, tpt) if tpt.tpe.annotations.exists(ai => isSilentAnnot(ai.tree)) => Some(typed)
+        case typed@Typed(_, tpt) if tpt.tpe != null && tpt.tpe.annotations.exists(ai => isSilentAnnot(ai.tree)) => Some(typed)
         case md: MemberDef if md.symbol.annotations.exists(ai => isSilentAnnot(ai.tree)) => Some(md)
         case _ => None
       }
