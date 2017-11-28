@@ -26,7 +26,8 @@ class SilencerPlugin(val global: Global) extends Plugin { plugin =>
     }
 
     def applySuppressions(unit: CompilationUnit): Unit = {
-      val silentAnnotType = typeOf[silent]
+      val silentSym = rootMirror.staticClass("com.github.ghik.silencer.silent")
+      val silentAnnotType = TypeRef(NoType, silentSym, Nil)
 
       def isSilentAnnot(tree: Tree) =
         tree.tpe != null && tree.tpe <:< silentAnnotType
