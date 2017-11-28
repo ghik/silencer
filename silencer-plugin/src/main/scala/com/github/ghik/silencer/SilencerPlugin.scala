@@ -32,7 +32,7 @@ class SilencerPlugin(val global: Global) extends Plugin { plugin =>
     def applySuppressions(unit: CompilationUnit): Unit = if (silentSym != NoSymbol) {
       val silentAnnotType = TypeRef(NoType, silentSym, Nil)
       def isSilentAnnot(tree: Tree) =
-        silentSym != NoSymbol && tree.tpe != null && tree.tpe <:< silentAnnotType
+        tree.tpe != null && tree.tpe <:< silentAnnotType
 
       def suppressedTree(tree: Tree) = tree match {
         case Annotated(annot, arg) if isSilentAnnot(annot) => Some(arg)
