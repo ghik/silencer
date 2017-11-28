@@ -5,7 +5,6 @@ import scala.tools.nsc.plugins.{Plugin, PluginComponent}
 import scala.tools.nsc.{Global, Phase}
 
 class SilencerPlugin(val global: Global) extends Plugin { plugin =>
-
   val name = "SilencerPlugin"
   val description = "Scala compiler plugin for warning suppression"
   val components: List[PluginComponent] = List(component)
@@ -21,16 +20,19 @@ class SilencerPlugin(val global: Global) extends Plugin { plugin =>
 
     import global._
 
+    private lazy val silentSym = try rootMirror.staticClass("com.github.ghik.silencer.silent") catch {
+      case _: ScalaReflectionException => NoSymbol
+    }
+
     def newPhase(prev: Phase) = new StdPhase(prev) {
       def apply(unit: CompilationUnit) = applySuppressions(unit)
     }
 
-    def applySuppressions(unit: CompilationUnit): Unit = {
-      val silentSym = rootMirror.staticClass("com.github.ghik.silencer.silent")
+    // if silent annotation is on on the classpath, do nothing - the project wouldn't compile anyway if annotation was used
+    def applySuppressions(unit: CompilationUnit): Unit = if (silentSym != NoSymbol) {
       val silentAnnotType = TypeRef(NoType, silentSym, Nil)
-
       def isSilentAnnot(tree: Tree) =
-        tree.tpe != null && tree.tpe <:< silentAnnotType
+        silentSym != NoSymbol && tree.tpe != null && tree.tpe <:< silentAnnotType
 
       def suppressedTree(tree: Tree) = tree match {
         case Annotated(annot, arg) if isSilentAnnot(annot) => Some(arg)
@@ -67,4 +69,3 @@ class SilencerPlugin(val global: Global) extends Plugin { plugin =>
   }
 
 }
-
