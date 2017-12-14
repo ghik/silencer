@@ -9,9 +9,12 @@ Scala has no local warning suppression (see e.g. [SI-1781](https://issues.scala-
 
 If you're using SBT, simply add these lines to your `build.sbt` to enable the plugin:
 
-    addCompilerPlugin("com.github.ghik" %% "silencer-plugin" % "0.5")
-    
-    libraryDependencies += "com.github.ghik" %% "silencer-lib" % "0.5"
+    val silencerVersion = "0.5"
+
+    libraryDependencies ++= Seq(
+      compilerPlugin("com.github.ghik" %% "silencer-plugin" % silencerVersion),
+      "com.github.ghik" %% "silencer-lib" % silencerVersion
+    )
     
 Silencer works with Scala 2.11.4+ and 2.12.0+. Also note that since both `silencer-plugin` and `silencer-lib` are compile time only dependencies, Silencer can also be used in ScalaJS without having to be cross compiled for it.
 
