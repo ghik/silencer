@@ -28,6 +28,8 @@ class SuppressingReporter(original: Reporter) extends Reporter {
     severity match {
       case INFO =>
         original.info(pos, msg, force)
+      case WARNING if !pos.isDefined =>
+        original.warning(pos, msg)
       case WARNING if !suppressedRanges.contains(pos.source) =>
         deferredWarnings.getOrElseUpdate(pos.source, new ArrayBuffer) += ((pos, msg))
       case WARNING if suppressedRanges(pos.source).exists(_.includes(pos)) =>
@@ -57,12 +59,12 @@ class SuppressingReporter(original: Reporter) extends Reporter {
   override def hasWarnings: Boolean =
     original.hasWarnings
 
-  override def resetCount(severity: Severity) = {
+  override def resetCount(severity: Severity): Unit = {
     super.resetCount(severity)
     original.resetCount(originalSeverity(severity))
   }
 
-  override def flush() = {
+  override def flush(): Unit = {
     super.flush()
     original.flush()
   }
