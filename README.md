@@ -9,22 +9,26 @@ Scala has no local warning suppression (see e.g. [SI-1781](https://issues.scala-
 
 If you're using SBT, simply add these lines to your `build.sbt` to enable the plugin:
 
-    val silencerVersion = "0.6"
+```scala
+val silencerVersion = "0.6"
 
-    libraryDependencies ++= Seq(
-      compilerPlugin("com.github.ghik" %% "silencer-plugin" % silencerVersion),
-      "com.github.ghik" %% "silencer-lib" % silencerVersion
-    )
+libraryDependencies ++= Seq(
+  compilerPlugin("com.github.ghik" %% "silencer-plugin" % silencerVersion),
+  "com.github.ghik" %% "silencer-lib" % silencerVersion
+)
+```
     
 Silencer works with Scala 2.11.4+ and 2.12.0+. Also note that since both `silencer-plugin` and `silencer-lib` are compile time only dependencies, Silencer can also be used in ScalaJS without having to be cross compiled for it.
 
 With the plugin enabled, warnings can be silenced using the `@com.github.ghik.silencer.silent` annotation. It can be applied on a single statement or expression, entire `def`/`val`/`var` definition or entire `class`/`object`/`trait` definition.
 
-    import com.github.ghik.silencer.silent
+```scala
+import com.github.ghik.silencer.silent
 
-    @silent class someClass { ... }
-    @silent def someMethod() = { ... }
-    someDeprecatedApi("something"): @silent
+@silent class someClass { ... }
+@silent def someMethod() = { ... }
+someDeprecatedApi("something"): @silent
+```
 
 The `@silent` annotation suppresses *all* warnings in some code fragment. There is currently no way to silent out only specific classes of warnings, like with `@SuppressWarnings` annotation in Java.
 
