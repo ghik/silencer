@@ -17,14 +17,14 @@ class SuppressingReporter(original: Reporter) extends Reporter {
     updateCounts()
   }
 
-  override def reset() {
+  override def reset(): Unit = {
     super.reset()
     original.reset()
     deferredWarnings.clear()
     suppressedRanges.clear()
   }
 
-  protected def info0(pos: Position, msg: String, severity: Severity, force: Boolean) {
+  protected def info0(pos: Position, msg: String, severity: Severity, force: Boolean): Unit = {
     severity match {
       case INFO =>
         original.info(pos, msg, force)
