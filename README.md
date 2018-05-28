@@ -10,7 +10,7 @@ Scala has no local warning suppression (see e.g. [SI-1781](https://issues.scala-
 If you're using SBT, simply add these lines to your `build.sbt` to enable the plugin:
 
 ```scala
-val silencerVersion = "0.6"
+val silencerVersion = "1.0"
 
 libraryDependencies ++= Seq(
   compilerPlugin("com.github.ghik" %% "silencer-plugin" % silencerVersion),

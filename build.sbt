@@ -6,7 +6,7 @@ val saveTestClasspath = taskKey[File](
 
 val commonSettings = Seq(
   organization := "com.github.ghik",
-  version := "0.6",
+  version := "1.0",
   scalaVersion := "2.12.6",
   crossScalaVersions := Seq("2.11.12", "2.12.6"),
   projectInfo := ModuleInfo(
@@ -56,7 +56,7 @@ lazy val `silencer-plugin` = project.dependsOn(`silencer-lib`)
   .settings(
     libraryDependencies ++= Seq(
       "org.scala-lang" % "scala-compiler" % scalaVersion.value,
-      "org.scalatest" %% "scalatest" % "3.0.3" % Test
+      "org.scalatest" %% "scalatest" % "3.0.4" % Test
     ),
     saveTestClasspath := {
       val result = (classDirectory in Test).value / "embeddedcp"
