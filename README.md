@@ -14,7 +14,7 @@ val silencerVersion = "1.0"
 
 libraryDependencies ++= Seq(
   compilerPlugin("com.github.ghik" %% "silencer-plugin" % silencerVersion),
-  "com.github.ghik" %% "silencer-lib" % silencerVersion
+  "com.github.ghik" %% "silencer-lib" % silencerVersion % Provided
 )
 ```
     
