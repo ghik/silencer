@@ -50,6 +50,11 @@ lazy val silencer = (project in file(".")).aggregate(`silencer-lib`, `silencer-p
 
 lazy val `silencer-lib` = project
   .settings(subprojectSettings: _*)
+  .settings(
+    libraryDependencies ++= Seq(
+      "org.scala-lang" % "scala-reflect" % scalaVersion.value % Test
+    )
+  )
 
 lazy val `silencer-plugin` = project.dependsOn(`silencer-lib`)
   .settings(subprojectSettings: _*)
@@ -60,7 +65,7 @@ lazy val `silencer-plugin` = project.dependsOn(`silencer-lib`)
     ),
     saveTestClasspath := {
       val result = (classDirectory in Test).value / "embeddedcp"
-      IO.write(result, (fullClasspath in Test).value.map(_.data.getAbsolutePath).mkString("\n"))
+      IO.write(result, (fullClasspath in `silencer-lib` in Test).value.map(_.data.getAbsolutePath).mkString("\n"))
       result
     },
     (test in Test) := (test in Test).dependsOn(saveTestClasspath).value,
