@@ -2,7 +2,6 @@ package testdata
 
 import com.github.ghik.silencer.silent
 
-
 object classSuppression {
   @silent
   class suppressed {

@@ -1,16 +1,37 @@
 package com.github.ghik.silencer
 
+import scala.util.matching.Regex
+
 import scala.reflect.internal.util.Position
 import scala.tools.nsc.plugins.{Plugin, PluginComponent}
 import scala.tools.nsc.{Global, Phase}
 
 class SilencerPlugin(val global: Global) extends Plugin { plugin =>
-  val name = "SilencerPlugin"
+  val name = "silencer"
   val description = "Scala compiler plugin for warning suppression"
   val components: List[PluginComponent] = List(component)
+  private var globalFilters = List.empty[Regex]
 
-  private val reporter = new SuppressingReporter(global.reporter)
-  global.reporter = reporter
+  private lazy val reporter =
+    new SuppressingReporter(global.reporter, globalFilters)
+
+  override def processOptions(
+    options: List[String],
+    error: String => Unit) {
+
+    options.foreach { opt =>
+      if (opt startsWith "globalFilters=") {
+        globalFilters = opt.drop(14).split(";").map(_.r).toList
+      }
+    }
+
+    global.inform(s"""Silencer using global filters: ${globalFilters.mkString(",")}""")
+
+    global.reporter = reporter
+  }
+
+  override val optionsHelp: Option[String] = Some(
+    "  -P:silencer:globalFilters=...             Semi-colon separated patterns to filter the warning messages")
 
   private object component extends PluginComponent {
     val global: plugin.global.type = plugin.global
