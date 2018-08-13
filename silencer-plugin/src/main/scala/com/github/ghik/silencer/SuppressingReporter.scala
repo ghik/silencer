@@ -7,9 +7,7 @@ import scala.collection.mutable, mutable.ArrayBuffer
 import scala.reflect.internal.util.{Position, SourceFile}
 import scala.tools.nsc.reporters.Reporter
 
-class SuppressingReporter(
-  original: Reporter,
-  globalFilters: List[Regex]) extends Reporter {
+class SuppressingReporter(original: Reporter, globalFilters: List[Regex]) extends Reporter {
 
   private val deferredWarnings = new mutable.HashMap[SourceFile, ArrayBuffer[(Position, String)]]
   private val suppressedRanges = new mutable.HashMap[SourceFile, List[Position]]

@@ -15,10 +15,7 @@ class SilencerPlugin(val global: Global) extends Plugin { plugin =>
   private lazy val reporter =
     new SuppressingReporter(global.reporter, globalFilters)
 
-  override def processOptions(
-    options: List[String],
-    error: String => Unit) {
-
+  override def processOptions(options: List[String], error: String => Unit): Unit = {
     options.foreach { opt =>
       if (opt startsWith "globalFilters=") {
         globalFilters = opt.drop(14).split(";").map(_.r).toList
