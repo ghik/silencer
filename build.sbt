@@ -6,9 +6,9 @@ val saveTestClasspath = taskKey[File](
 
 val commonSettings = Seq(
   organization := "com.github.ghik",
-  version := "1.1",
+  version := "1.2-SNAPSHOT",
   scalaVersion := "2.12.6",
-  crossScalaVersions := Seq("2.11.12", "2.12.6", "2.13.0-M4"),
+  crossScalaVersions := Seq("2.11.12", scalaVersion.value, "2.13.0-M4"),
   projectInfo := ModuleInfo(
     nameFormal = "Silencer",
     description = "Scala compiler plugin for annotation-based warning suppression",

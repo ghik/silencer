@@ -1,11 +1,14 @@
 package com.github.ghik.silencer
 
-import scala.collection.mutable
-import scala.collection.mutable.ArrayBuffer
+import scala.util.matching.Regex
+
+import scala.collection.mutable, mutable.ArrayBuffer
+
 import scala.reflect.internal.util.{Position, SourceFile}
 import scala.tools.nsc.reporters.Reporter
 
-class SuppressingReporter(original: Reporter) extends Reporter {
+class SuppressingReporter(original: Reporter, globalFilters: List[Regex]) extends Reporter {
+
   private val deferredWarnings = new mutable.HashMap[SourceFile, ArrayBuffer[(Position, String)]]
   private val suppressedRanges = new mutable.HashMap[SourceFile, List[Position]]
 
@@ -28,6 +31,8 @@ class SuppressingReporter(original: Reporter) extends Reporter {
     severity match {
       case INFO =>
         original.info(pos, msg, force)
+      case WARNING if globalFilters.exists(_.findFirstIn(msg).isDefined) =>
+        ()
       case WARNING if !pos.isDefined =>
         original.warning(pos, msg)
       case WARNING if !suppressedRanges.contains(pos.source) =>
