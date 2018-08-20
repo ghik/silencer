@@ -1,4 +1,4 @@
-## Scala compiler plugin for annotation-based warning suppression
+## Scala compiler plugin for warning suppression
 
 [![Build Status](https://travis-ci.org/ghik/silencer.svg?branch=master)](https://travis-ci.org/ghik/silencer)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.ghik/silencer-plugin_2.12/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.github.ghik/silencer-plugin_2.12)
@@ -20,6 +20,8 @@ libraryDependencies ++= Seq(
     
 Silencer currently works with Scala 2.11.4+, 2.12.0+ and 2.13.0-M4+. Also note that since both `silencer-plugin` and `silencer-lib` are compile time only dependencies, Silencer can also be used in ScalaJS and Scala Native without having to be cross compiled for it.
 
+#### Annotation-based suppression
+
 With the plugin enabled, warnings can be silenced using the `@com.github.ghik.silencer.silent` annotation. It can be applied on a single statement or expression, entire `def`/`val`/`var` definition or entire `class`/`object`/`trait` definition.
 
 ```scala
@@ -31,6 +33,14 @@ someDeprecatedApi("something"): @silent
 ```
 
 The `@silent` annotation suppresses *all* warnings in some code fragment. There is currently no way to silent out only specific classes of warnings, like with `@SuppressWarnings` annotation in Java.
+
+#### Global regex-based suppression
+
+You can also suppress warnings globally based on a warning message regex. In order to do that, pass this option to `scalac`:
+
+```scala
+scalacOptions += "-P:silencer:globalFilters=[semi-colon separated message patterns]"
+```
 
 ### Status
 
