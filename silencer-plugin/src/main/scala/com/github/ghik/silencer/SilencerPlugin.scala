@@ -22,7 +22,9 @@ class SilencerPlugin(val global: Global) extends Plugin { plugin =>
       }
     }
 
-    global.inform(s"""Silencer using global filters: ${globalFilters.mkString(",")}""")
+    if (globalFilters.nonEmpty) {
+      global.inform(s"""Silencer using global filters: ${globalFilters.mkString(",")}""")
+    }
 
     global.reporter = reporter
   }
