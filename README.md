@@ -44,5 +44,5 @@ scalacOptions += "-P:silencer:globalFilters=[semi-colon separated message patter
 
 ### Status
 
-Silencer is succesfully being used in [AVSystem](https://github.com/AVSystem) open source and closed projects, e.g. [AVSystem  Scala Commons Library](https://github.com/AVSystem/scala-commons)
+Silencer is successfully being used in [AVSystem](https://github.com/AVSystem) open source and closed projects, e.g. [AVSystem  Scala Commons Library](https://github.com/AVSystem/scala-commons)
 
