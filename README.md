@@ -42,6 +42,12 @@ You can also suppress warnings globally based on a warning message regex. In ord
 scalacOptions += "-P:silencer:globalFilters=[semi-colon separated message patterns]"
 ```
 
+Another option is to suppress warnings globally based on the source path. In order to do that, pass this option to `scalac`:
+
+```scala
+scalacOptions += "-P:silencer:globalPathFilters=[semi-colon separated message patterns]"
+```
+
 ### Status
 
 Silencer is successfully being used in [AVSystem](https://github.com/AVSystem) open source and closed projects, e.g. [AVSystem  Scala Commons Library](https://github.com/AVSystem/scala-commons)
