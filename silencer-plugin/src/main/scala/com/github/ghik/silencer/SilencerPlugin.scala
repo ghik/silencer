@@ -11,19 +11,28 @@ class SilencerPlugin(val global: Global) extends Plugin { plugin =>
   val description = "Scala compiler plugin for warning suppression"
   val components: List[PluginComponent] = List(component)
   private var globalFilters = List.empty[Regex]
+  private var globalPathFilters = List.empty[Regex]
 
   private lazy val reporter =
-    new SuppressingReporter(global.reporter, globalFilters)
+    new SuppressingReporter(global.reporter, globalFilters, globalPathFilters)
 
   override def processOptions(options: List[String], error: String => Unit): Unit = {
     options.foreach { opt =>
       if (opt startsWith "globalFilters=") {
         globalFilters = opt.drop(14).split(";").map(_.r).toList
       }
+
+      if (opt startsWith "globalPathFilters=") {
+        globalPathFilters = opt.drop(18).split(";").map(_.r).toList
+      }
     }
 
     if (globalFilters.nonEmpty) {
       global.inform(s"""Silencer using global filters: ${globalFilters.mkString(",")}""")
+    }
+
+    if (globalPathFilters.nonEmpty) {
+      global.inform(s"""Silencer using global path filters: ${globalPathFilters.mkString(",")}""")
     }
 
     global.reporter = reporter

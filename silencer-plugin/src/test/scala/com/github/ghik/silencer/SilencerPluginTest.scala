@@ -17,8 +17,9 @@ class SilencerPluginTest extends FunSuite { suite =>
   settings.deprecation.value = true
 
 
-  settings.pluginOptions.value = settings.pluginOptions.value :+ (
-    "silencer:globalFilters=depreFunc1\\ in\\ object\\ globallyFiltered\\ is\\ deprecated;useless.*filter")
+  settings.pluginOptions.value = settings.pluginOptions.value :+
+    "silencer:globalFilters=depreFunc1\\ in\\ object\\ globallyFiltered\\ is\\ deprecated;useless.*filter" :+
+    "silencer:globalPathFilters=.*ByPath"
 
   Option(getClass.getResourceAsStream("/embeddedcp")) match {
     case Some(is) =>
@@ -76,9 +77,12 @@ class SilencerPluginTest extends FunSuite { suite =>
   test("global filters") {
     testFile("globallyFiltered.scala", 1)
   }
+  test("global path filters") {
+    testFile("globallyFilteredByPath.scala")
+  }
   test("multiple files compilation") {
     val files = new File(testdata).listFiles().filter(_.isFile).map(_.getName)
     compile(files: _*)
-    assertWarnings(files.length)
+    assertWarnings(files.length - 1) // one is excluded by path
   }
 }

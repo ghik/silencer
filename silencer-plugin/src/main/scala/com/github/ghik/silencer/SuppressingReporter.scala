@@ -7,7 +7,7 @@ import scala.collection.mutable, mutable.ArrayBuffer
 import scala.reflect.internal.util.{Position, SourceFile}
 import scala.tools.nsc.reporters.Reporter
 
-class SuppressingReporter(original: Reporter, globalFilters: List[Regex]) extends Reporter {
+class SuppressingReporter(original: Reporter, globalFilters: List[Regex], globalPathFilters: List[Regex]) extends Reporter {
 
   private val deferredWarnings = new mutable.HashMap[SourceFile, ArrayBuffer[(Position, String)]]
   private val suppressedRanges = new mutable.HashMap[SourceFile, List[Position]]
@@ -31,7 +31,7 @@ class SuppressingReporter(original: Reporter, globalFilters: List[Regex]) extend
     severity match {
       case INFO =>
         original.info(pos, msg, force)
-      case WARNING if globalFilters.exists(_.findFirstIn(msg).isDefined) =>
+      case WARNING if existsIn(globalPathFilters, pos.source.path) || existsIn(globalFilters, msg) =>
         ()
       case WARNING if !pos.isDefined =>
         original.warning(pos, msg)
@@ -45,6 +45,9 @@ class SuppressingReporter(original: Reporter, globalFilters: List[Regex]) extend
     }
     updateCounts()
   }
+
+  private def existsIn(filters: List[Regex], source: String): Boolean =
+    filters.exists(_.findFirstIn(source).isDefined)
 
   private def updateCounts(): Unit = {
     INFO.count = original.INFO.count
