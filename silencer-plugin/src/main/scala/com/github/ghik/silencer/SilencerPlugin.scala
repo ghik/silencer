@@ -1,45 +1,44 @@
 package com.github.ghik.silencer
 
-import scala.util.matching.Regex
-
 import scala.reflect.internal.util.Position
 import scala.tools.nsc.plugins.{Plugin, PluginComponent}
 import scala.tools.nsc.{Global, Phase}
+import scala.util.matching.Regex
 
-class SilencerPlugin(val global: Global) extends Plugin { plugin =>
+class SilencerPlugin(val global: Global) extends Plugin {
+  plugin =>
   val name = "silencer"
   val description = "Scala compiler plugin for warning suppression"
   val components: List[PluginComponent] = List(component)
-  private var globalFilters = List.empty[Regex]
-  private var globalPathFilters = List.empty[Regex]
+  private var filters = FilterType.all.map(_ -> List.empty[Regex]).toMap
 
   private lazy val reporter =
-    new SuppressingReporter(global.reporter, globalFilters, globalPathFilters)
+    new SuppressingReporter(global.reporter, filters)
 
   override def processOptions(options: List[String], error: String => Unit): Unit = {
     options.foreach { opt =>
-      if (opt startsWith "globalFilters=") {
-        globalFilters = opt.drop(14).split(";").map(_.r).toList
+      val (filterName, regexString) = opt.span(_ > '=')
+      for {
+        filterType <- FilterType.parseName(filterName)
+        previousRegexList <- filters.get(filterType)
+        currentRegexList = regexString.drop(1).split(';').map(_.r)
+        if currentRegexList.nonEmpty
       }
-
-      if (opt startsWith "globalPathFilters=") {
-        globalPathFilters = opt.drop(18).split(";").map(_.r).toList
-      }
+        filters = filters + (filterType -> (previousRegexList ++ currentRegexList))
     }
 
-    if (globalFilters.nonEmpty) {
-      global.inform(s"""Silencer using global filters: ${globalFilters.mkString(",")}""")
-    }
-
-    if (globalPathFilters.nonEmpty) {
-      global.inform(s"""Silencer using global path filters: ${globalPathFilters.mkString(",")}""")
+    filters.foreach { case (filterType, regexList) if regexList.nonEmpty =>
+      global.inform(s"Silencer using ${filterType.name}: ${regexList.mkString(",")}")
     }
 
     global.reporter = reporter
   }
 
   override val optionsHelp: Option[String] = Some(
-    "  -P:silencer:globalFilters=...             Semi-colon separated patterns to filter the warning messages")
+    """  -P:silencer:globalFilters=...             Semi-colon separated patterns to filter the warning messages
+      |  -P:silencer:globalPathFilters=...         Semi-colon separated patterns to filter the source file paths
+      |  -P:silencer:sourceRootFilters=...         Semi-colon separated patterns for detection of the source root
+    """.stripMargin)
 
   private object component extends PluginComponent {
     val global: plugin.global.type = plugin.global

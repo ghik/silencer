@@ -45,7 +45,13 @@ scalacOptions += "-P:silencer:globalFilters=[semi-colon separated message patter
 Another option is to suppress warnings globally based on the source path. In order to do that, pass this option to `scalac`:
 
 ```scala
-scalacOptions += "-P:silencer:globalPathFilters=[semi-colon separated message patterns]"
+scalacOptions += "-P:silencer:globalPathFilters=[semi-colon separated file path patterns]"
+```
+
+Due to the fact that `scalac` can only determine absolute paths, you can add an option, to specify the source root path to filter out, before, the file path patterns are applied:
+
+```scala
+scalacOptions += "-P:silencer:sourceRootFilters=[semi-colon separated source root patterns]"
 ```
 
 ### Status
