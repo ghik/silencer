@@ -49,7 +49,7 @@ scalacOptions += "-P:silencer:pathFilters=[semi-colon separated file path patter
 ```
 
 Please note that in order to support reproducible builds, we've standardized on the file paths to use the UNIX filename separator `/`.
-Thus, when compiling the file path pattern take into account that you must use the `/` separator instead of the `\` even on environments that don't support it.
+Thus, when compiling the file path pattern, take into account that you must use the `/` separator instead of the `\` on environments that don't support it.
 
 
 Due to the fact that `scalac` can only determine absolute paths, you can add an option, to specify the source root path to filter out, before, the file path patterns are applied:

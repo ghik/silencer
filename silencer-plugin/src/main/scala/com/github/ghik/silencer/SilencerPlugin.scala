@@ -1,8 +1,8 @@
 package com.github.ghik.silencer
 
 import java.io.File
+import scala.collection.mutable.ListBuffer
 import scala.util.matching.Regex
-
 import scala.reflect.internal.util.Position
 import scala.tools.nsc.plugins.{Plugin, PluginComponent}
 import scala.tools.nsc.{Global, Phase}
@@ -11,35 +11,25 @@ class SilencerPlugin(val global: Global) extends Plugin { plugin =>
   val name = "silencer"
   val description = "Scala compiler plugin for warning suppression"
   val components: List[PluginComponent] = List(component)
-  private var globalFilters = List.empty[Regex]
-  private var pathFilters = List.empty[Regex]
-  private var sourceRoots = List.empty[File]
+  private var globalFilters = ListBuffer.empty[Regex]
+  private var pathFilters = ListBuffer.empty[Regex]
+  private var sourceRoots = ListBuffer.empty[File]
 
   private lazy val reporter =
-    new SuppressingReporter(global.reporter, globalFilters, pathFilters, sourceRoots)
+    new SuppressingReporter(global.reporter, globalFilters.result(), pathFilters.result(), sourceRoots.result())
 
-  private def split(s: String) = s.drop(1).split(";")
+  private def split(s: String) = s.split(';')
 
   override def processOptions(options: List[String], error: String => Unit): Unit = {
-    options.foreach(_.span(_ > '=') match {
-      case ("globalFilters", pattern) =>
+    options.foreach(_.split("=", 2) match {
+      case Array("globalFilters", pattern) =>
         globalFilters = globalFilters ++ split(pattern).map(_.r)
-      case ("pathFilters", pattern) =>
+      case Array("pathFilters", pattern) =>
         pathFilters = pathFilters ++ split(pattern).map(_.r)
-      case ("sourceRoots", rootPaths) =>
+      case Array("sourceRoots", rootPaths) =>
         sourceRoots = sourceRoots ++ split(rootPaths).map(new File(_))
-      case (unsupportedOption, _) =>
-        global.inform(s"Silencer does not support filter option: $unsupportedOption")
+      case _ =>
     })
-
-    if (globalFilters.nonEmpty)
-      global.inform(s"Silencer using global filters: ${globalFilters.mkString(",")}")
-
-    if (sourceRoots.nonEmpty)
-      global.inform(s"Silencer using source roots: ${sourceRoots.mkString(",")}")
-
-    if (pathFilters.nonEmpty)
-      global.inform(s"Silencer using path filters: ${pathFilters.mkString(",")}")
 
     global.reporter = reporter
   }
@@ -47,7 +37,7 @@ class SilencerPlugin(val global: Global) extends Plugin { plugin =>
   override val optionsHelp: Option[String] = Some(
     """  -P:silencer:globalFilters=...             Semi-colon separated regex patterns to filter the warning messages
       |  -P:silencer:pathFilters=...               Semi-colon separated regex patterns to filter the source file paths
-      |  -P:silencer:sourceRoots=...               Semi-colon separated ¡strings for detection of the source root
+      |  -P:silencer:sourceRoots=...               Semi-colon separated strings for detection of the source root
     """.stripMargin)
 
   private object component extends PluginComponent {
