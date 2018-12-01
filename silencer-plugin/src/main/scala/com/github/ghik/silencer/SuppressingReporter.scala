@@ -1,16 +1,14 @@
 package com.github.ghik.silencer
 
-import scala.util.Try
+import java.io.File
 import scala.util.matching.Regex
-
-import scala.collection.mutable, mutable.ArrayBuffer
-
+import scala.collection.mutable
+import mutable.ArrayBuffer
+import scala.annotation.tailrec
 import scala.reflect.internal.util.{Position, SourceFile}
 import scala.tools.nsc.reporters.Reporter
 
-import com.github.ghik.silencer.FilterType.{MessageFilters, PathFilters, SourceRootFilters}
-
-class SuppressingReporter(original: Reporter, filters: Map[FilterType, List[Either[String, Regex]]]) extends Reporter {
+class SuppressingReporter(original: Reporter, globalFilters: List[Regex], pathFilters: List[Regex], sourceRoots: List[File]) extends Reporter {
 
   private val deferredWarnings = new mutable.HashMap[SourceFile, ArrayBuffer[(Position, String)]]
   private val suppressedRanges = new mutable.HashMap[SourceFile, List[Position]]
@@ -31,24 +29,17 @@ class SuppressingReporter(original: Reporter, filters: Map[FilterType, List[Eith
   }
 
   protected def info0(pos: Position, msg: String, severity: Severity, force: Boolean): Unit = {
-    val absolutePath = pos.source.path.replaceAllLiterally("\\", "/")
-    val relativePathOpt =
-      filters.get(SourceRootFilters).flatMap { pathList =>
-        val escapedPaths = pathList.flatMap(_.fold(p => Some(p.replaceAllLiterally("\\", "/")), _ => None))
-        val matchedPath =
-          escapedPaths.collectFirst {
-            case path if absolutePath.contains(path) => Try(absolutePath.substring(path.length)).toOption
-          }
-
-        matchedPath.flatten
-      }
-
-    val relativePath = relativePathOpt.getOrElse(absolutePath)
+    val absoluteFile = pos.source.file.file
+    val relativePathOpt = sourceRoots.collectFirst {
+      case sourceRoot if directoryContains(sourceRoot, absoluteFile) =>
+        sourceRoot.toURI.relativize(absoluteFile.toURI).getPath
+    }
+    val relativePath = relativePathOpt.getOrElse(absoluteFile.getPath).replaceAllLiterally("\\", "/")
 
     severity match {
       case INFO =>
         original.info(pos, msg, force)
-      case WARNING if existsIn(PathFilters, relativePath) || existsIn(MessageFilters, msg) =>
+      case WARNING if existsIn(pathFilters, relativePath) || existsIn(globalFilters, msg) =>
         ()
       case WARNING if !pos.isDefined =>
         original.warning(pos, msg)
@@ -63,8 +54,14 @@ class SuppressingReporter(original: Reporter, filters: Map[FilterType, List[Eith
     updateCounts()
   }
 
-  private def existsIn(filterType: FilterType, source: String): Boolean =
-    filters.get(filterType).fold(ifEmpty = false)(_.exists(_.fold(_ => false, _.findFirstIn(source).isDefined)))
+  @tailrec
+  private def directoryContains(dir: File, child: File): Boolean =
+    if(child == null) false
+    else if(dir == child) true
+    else directoryContains(dir, child.getParentFile)
+
+  private def existsIn(filters: List[Regex], source: String): Boolean =
+    filters.exists(_.findFirstIn(source).isDefined)
 
   private def updateCounts(): Unit = {
     INFO.count = original.INFO.count

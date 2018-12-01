@@ -19,8 +19,8 @@ class SilencerPluginTest extends FunSuite { suite =>
 
   settings.pluginOptions.value = settings.pluginOptions.value :+
     "silencer:globalFilters=depreFunc1\\ in\\ object\\ globallyFiltered\\ is\\ deprecated;useless.*filter" :+
-    "silencer:globalPathFilters=.*ByPath" :+
-    "silencer:sourceRootFilters=silencer-plugin/"
+    "silencer:pathFilters=.*ByPath" :+
+    "silencer:sourceRoots=silencer-plugin/"
 
   Option(getClass.getResourceAsStream("/embeddedcp")) match {
     case Some(is) =>
