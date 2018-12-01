@@ -11,9 +11,9 @@ class SilencerPlugin(val global: Global) extends Plugin { plugin =>
   val name = "silencer"
   val description = "Scala compiler plugin for warning suppression"
   val components: List[PluginComponent] = List(component)
-  private var globalFilters = ListBuffer.empty[Regex]
-  private var pathFilters = ListBuffer.empty[Regex]
-  private var sourceRoots = ListBuffer.empty[File]
+  private val globalFilters = ListBuffer.empty[Regex]
+  private val pathFilters = ListBuffer.empty[Regex]
+  private val sourceRoots = ListBuffer.empty[File]
 
   private lazy val reporter =
     new SuppressingReporter(global.reporter, globalFilters.result(), pathFilters.result(), sourceRoots.result())
@@ -23,11 +23,11 @@ class SilencerPlugin(val global: Global) extends Plugin { plugin =>
   override def processOptions(options: List[String], error: String => Unit): Unit = {
     options.foreach(_.split("=", 2) match {
       case Array("globalFilters", pattern) =>
-        globalFilters = globalFilters ++ split(pattern).map(_.r)
+        globalFilters ++= split(pattern).map(_.r)
       case Array("pathFilters", pattern) =>
-        pathFilters = pathFilters ++ split(pattern).map(_.r)
+        pathFilters ++= split(pattern).map(_.r)
       case Array("sourceRoots", rootPaths) =>
-        sourceRoots = sourceRoots ++ split(rootPaths).map(new File(_))
+        sourceRoots ++= split(rootPaths).map(new File(_))
       case _ =>
     })
 
