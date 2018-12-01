@@ -10,7 +10,7 @@ class SilencerPlugin(val global: Global) extends Plugin {
   val name = "silencer"
   val description = "Scala compiler plugin for warning suppression"
   val components: List[PluginComponent] = List(component)
-  private var filters = FilterType.all.map(_ -> List.empty[Regex]).toMap
+  private var filters = FilterType.all.map(_ -> List.empty[Either[String, Regex]]).toMap
 
   private lazy val reporter =
     new SuppressingReporter(global.reporter, filters)
@@ -20,11 +20,11 @@ class SilencerPlugin(val global: Global) extends Plugin {
       val (filterName, regexString) = opt.span(_ > '=')
       for {
         filterType <- FilterType.parseName(filterName)
-        previousRegexList <- filters.get(filterType)
-        currentRegexList = regexString.drop(1).split(';').map(_.r)
-        if currentRegexList.nonEmpty
+        previousPatterns <- filters.get(filterType)
+        currentPatternList = regexString.drop(1).split(';').map(filterType.parsePattern)
+        if currentPatternList.nonEmpty
       }
-        filters = filters + (filterType -> (previousRegexList ++ currentRegexList))
+        filters = filters + (filterType -> (previousPatterns ++ currentPatternList))
     }
 
     filters.foreach { case (filterType, regexList) if regexList.nonEmpty =>

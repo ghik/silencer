@@ -51,8 +51,10 @@ scalacOptions += "-P:silencer:globalPathFilters=[semi-colon separated file path 
 Due to the fact that `scalac` can only determine absolute paths, you can add an option, to specify the source root path to filter out, before, the file path patterns are applied:
 
 ```scala
-scalacOptions += "-P:silencer:sourceRootFilters=[semi-colon separated source root patterns]"
+scalacOptions += "-P:silencer:sourceRootFilters=[semi-colon separated source root paths]"
 ```
+
+Please note that in order to support reproducible builds, we've standardized on the source root path to use the UNIX filename separator `/`, thus all `\` will get replaced by `/`
 
 ### Status
 

@@ -4,11 +4,11 @@ import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import scala.reflect.internal.util.{Position, SourceFile}
 import scala.tools.nsc.reporters.Reporter
+import scala.util.Try
 import scala.util.matching.Regex
-
 import com.github.ghik.silencer.FilterType.{MessageFilters, PathFilters, SourceRootFilters}
 
-class SuppressingReporter(original: Reporter, filters: Map[FilterType, List[Regex]]) extends Reporter {
+class SuppressingReporter(original: Reporter, filters: Map[FilterType, List[Either[String, Regex]]]) extends Reporter {
 
   private val deferredWarnings = new mutable.HashMap[SourceFile, ArrayBuffer[(Position, String)]]
   private val suppressedRanges = new mutable.HashMap[SourceFile, List[Position]]
@@ -29,11 +29,19 @@ class SuppressingReporter(original: Reporter, filters: Map[FilterType, List[Rege
   }
 
   protected def info0(pos: Position, msg: String, severity: Severity, force: Boolean): Unit = {
-    val absolutePath = pos.source.path
-    val relativePath =
-      filters.get(SourceRootFilters).flatMap(_.collectFirst {
-        case regex if regex.findPrefixOf(absolutePath).isDefined => regex.replaceFirstIn(absolutePath, "")
-      }).getOrElse(absolutePath)
+    val absolutePath = pos.source.path.replaceAllLiterally("\\", "/")
+    val relativePathOpt =
+      filters.get(SourceRootFilters).flatMap { pathList =>
+        val escapedPaths = pathList.flatMap(_.fold(p => Some(p.replaceAllLiterally("\\", "/")), _ => None))
+        val matchedPath =
+          escapedPaths.collectFirst {
+            case path if absolutePath.contains(path) => Try(absolutePath.substring(path.length)).toOption
+          }
+
+        matchedPath.flatten
+      }
+
+    val relativePath = relativePathOpt.getOrElse(absolutePath)
 
     severity match {
       case INFO =>
@@ -54,7 +62,7 @@ class SuppressingReporter(original: Reporter, filters: Map[FilterType, List[Rege
   }
 
   private def existsIn(filterType: FilterType, source: String): Boolean =
-    filters.get(filterType).fold(ifEmpty = false)(_.exists(_.findFirstIn(source).isDefined))
+    filters.get(filterType).fold(ifEmpty = false)(_.exists(_.exists(_.findFirstIn(source).isDefined)))
 
   private def updateCounts(): Unit = {
     INFO.count = original.INFO.count
