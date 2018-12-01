@@ -62,7 +62,7 @@ class SuppressingReporter(original: Reporter, filters: Map[FilterType, List[Eith
   }
 
   private def existsIn(filterType: FilterType, source: String): Boolean =
-    filters.get(filterType).fold(ifEmpty = false)(_.exists(_.exists(_.findFirstIn(source).isDefined)))
+    filters.get(filterType).fold(ifEmpty = false)(_.exists(_.fold(_ => false, _.findFirstIn(source).isDefined)))
 
   private def updateCounts(): Unit = {
     INFO.count = original.INFO.count
