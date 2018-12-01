@@ -1,12 +1,12 @@
 package com.github.ghik.silencer
 
+import scala.util.matching.Regex
+
 import scala.reflect.internal.util.Position
 import scala.tools.nsc.plugins.{Plugin, PluginComponent}
 import scala.tools.nsc.{Global, Phase}
-import scala.util.matching.Regex
 
-class SilencerPlugin(val global: Global) extends Plugin {
-  plugin =>
+class SilencerPlugin(val global: Global) extends Plugin { plugin =>
   val name = "silencer"
   val description = "Scala compiler plugin for warning suppression"
   val components: List[PluginComponent] = List(component)
@@ -17,18 +17,18 @@ class SilencerPlugin(val global: Global) extends Plugin {
 
   override def processOptions(options: List[String], error: String => Unit): Unit = {
     options.foreach { opt =>
-      val (filterName, regexString) = opt.span(_ > '=')
+      val (filterName, pattern) = opt.span(_ > '=')
       for {
         filterType <- FilterType.parseName(filterName)
-        previousPatterns <- filters.get(filterType)
-        currentPatternList = regexString.drop(1).split(';').map(filterType.parsePattern)
-        if currentPatternList.nonEmpty
-      }
-        filters = filters + (filterType -> (previousPatterns ++ currentPatternList))
+        previousFilters <- filters.get(filterType)
+        currentFilters = pattern.drop(1).split(';').map(filterType.parsePattern)
+        if currentFilters.nonEmpty
+      } yield
+        filters = filters + (filterType -> (previousFilters ++ currentFilters))
     }
 
-    filters.foreach { case (filterType, regexList) if regexList.nonEmpty =>
-      global.inform(s"Silencer using ${filterType.name}: ${regexList.mkString(",")}")
+    filters.foreach { case (filterType, filterList) if filterList.nonEmpty =>
+      global.inform(s"Silencer using ${filterType.name}: ${filterList.mkString(",")}")
     }
 
     global.reporter = reporter
@@ -37,7 +37,7 @@ class SilencerPlugin(val global: Global) extends Plugin {
   override val optionsHelp: Option[String] = Some(
     """  -P:silencer:globalFilters=...             Semi-colon separated patterns to filter the warning messages
       |  -P:silencer:globalPathFilters=...         Semi-colon separated patterns to filter the source file paths
-      |  -P:silencer:sourceRootFilters=...         Semi-colon separated patterns for detection of the source root
+      |  -P:silencer:sourceRootFilters=...         Semi-colon separated strings for detection of the source root
     """.stripMargin)
 
   private object component extends PluginComponent {

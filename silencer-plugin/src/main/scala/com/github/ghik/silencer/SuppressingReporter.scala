@@ -1,11 +1,13 @@
 package com.github.ghik.silencer
 
-import scala.collection.mutable
-import scala.collection.mutable.ArrayBuffer
-import scala.reflect.internal.util.{Position, SourceFile}
-import scala.tools.nsc.reporters.Reporter
 import scala.util.Try
 import scala.util.matching.Regex
+
+import scala.collection.mutable, mutable.ArrayBuffer
+
+import scala.reflect.internal.util.{Position, SourceFile}
+import scala.tools.nsc.reporters.Reporter
+
 import com.github.ghik.silencer.FilterType.{MessageFilters, PathFilters, SourceRootFilters}
 
 class SuppressingReporter(original: Reporter, filters: Map[FilterType, List[Either[String, Regex]]]) extends Reporter {
