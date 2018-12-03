@@ -42,20 +42,26 @@ You can also suppress warnings globally based on a warning message regex. In ord
 scalacOptions += "-P:silencer:globalFilters=[semi-colon separated message patterns]"
 ```
 
-Another option is to suppress warnings globally based on the source path. In order to do that, pass this option to `scalac`:
+#### Filename based suppression
+
+Another option is to suppress all warnings in selected source files. This can be done by specifying a list of file path regexes:
 
 ```scala
 scalacOptions += "-P:silencer:pathFilters=[semi-colon separated file path patterns]"
 ```
 
-Please note that in order to support reproducible builds, we've standardized on the file paths to use the UNIX filename separator `/`.
-Thus, when compiling the file path pattern, take into account that you must use the `/` separator instead of the `\` on environments that don't support it.
+**NOTE**: In order to make builds independent of environment, filename separators are normalized to UNIX style (`/`) before the path is matched against path patterns.
 
-
-Due to the fact that `scalac` can only determine absolute paths, you can add an option, to specify the source root path to filter out, before, the file path patterns are applied:
+By default, absolute file path is matched against path patterns. In order to make your build independent of where your project is checked out, you can specify a list of source root directories. Source file paths will be relativized with respect to them  before being matched against path patterns. Usually it should be enough to pass project base directory as source root (i.e. `baseDirectory.value` in SBT):
 
 ```scala
-scalacOptions += "-P:silencer:sourceRoots=[semi-colon separated source root paths]"
+scalacOptions += s"-P:silencer:sourceRoots=${baseDirectory.value}"
+```
+
+Another good choice for source roots may be actual SBT source directories:
+
+```scala
+scalacOptions += s"-P:silencer:sourceRoots=${sourceDirectories.value.mkString(";")}"
 ```
 
 ### Status
