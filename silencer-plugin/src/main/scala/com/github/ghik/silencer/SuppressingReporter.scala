@@ -32,9 +32,9 @@ class SuppressingReporter(original: Reporter, globalFilters: List[Regex], pathFi
   protected def info0(pos: Position, msg: String, severity: Severity, force: Boolean): Unit = {
     def matchesPathFilter: Boolean = pathFilters.nonEmpty && {
       val filePath = normalizedPathCache.getOrElseUpdate(pos.source, {
-        val absoluteFile = pos.source.file.file
-        val relIt = sourceRoots.iterator.flatMap(relativize(_, absoluteFile))
-        val relPath = if (relIt.hasNext) relIt.next() else absoluteFile.getAbsolutePath
+        val file = pos.source.file.file
+        val relIt = sourceRoots.iterator.flatMap(relativize(_, file))
+        val relPath = if (relIt.hasNext) relIt.next() else file.getPath
         relPath.replaceAllLiterally("\\", "/")
       })
       anyMatches(pathFilters, filePath)
@@ -59,8 +59,8 @@ class SuppressingReporter(original: Reporter, globalFilters: List[Regex], pathFi
   }
 
   private def relativize(dir: File, child: File): Option[String] = {
-    val childPath = child.getAbsolutePath
-    val dirPath = dir.getAbsolutePath + File.separator
+    val childPath = child.getCanonicalPath
+    val dirPath = dir.getCanonicalPath + File.separator
     if (childPath.startsWith(dirPath)) Some(childPath.substring(dirPath.length)) else None
   }
 
