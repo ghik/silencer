@@ -1,16 +1,19 @@
 package com.github.ghik.silencer
 
 import java.io.File
+
 import scala.collection.mutable.ListBuffer
-import scala.util.matching.Regex
 import scala.reflect.internal.util.Position
 import scala.tools.nsc.plugins.{Plugin, PluginComponent}
 import scala.tools.nsc.{Global, Phase}
+import scala.util.matching.Regex
 
-class SilencerPlugin(val global: Global) extends Plugin { plugin =>
+class SilencerPlugin(val global: Global) extends Plugin {
+  plugin =>
   val name = "silencer"
   val description = "Scala compiler plugin for warning suppression"
   val components: List[PluginComponent] = List(component)
+
   private val globalFilters = ListBuffer.empty[Regex]
   private val pathFilters = ListBuffer.empty[Regex]
   private val sourceRoots = ListBuffer.empty[File]
@@ -35,9 +38,9 @@ class SilencerPlugin(val global: Global) extends Plugin { plugin =>
   }
 
   override val optionsHelp: Option[String] = Some(
-    """  -P:silencer:globalFilters=...             Semi-colon separated regex patterns to filter the warning messages
-      |  -P:silencer:pathFilters=...               Semi-colon separated regex patterns to filter the source file paths
-      |  -P:silencer:sourceRoots=...               Semi-colon separated strings for detection of the source root
+    """  -P:silencer:globalFilters=...             Semicolon separated regexes for filtering warning messages globally
+      |  -P:silencer:pathFilters=...               Semicolon separated regexes for filtering source paths
+      |  -P:silencer:sourceRoots=...               Semicolon separated paths of source root directories
     """.stripMargin)
 
   private object component extends PluginComponent {

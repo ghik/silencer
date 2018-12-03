@@ -1,17 +1,18 @@
 package com.github.ghik.silencer
 
 import java.io.File
-import scala.util.matching.Regex
+
 import scala.collection.mutable
-import mutable.ArrayBuffer
-import scala.annotation.tailrec
+import scala.collection.mutable.ArrayBuffer
 import scala.reflect.internal.util.{Position, SourceFile}
 import scala.tools.nsc.reporters.Reporter
+import scala.util.matching.Regex
 
 class SuppressingReporter(original: Reporter, globalFilters: List[Regex], pathFilters: List[Regex], sourceRoots: List[File]) extends Reporter {
 
   private val deferredWarnings = new mutable.HashMap[SourceFile, ArrayBuffer[(Position, String)]]
   private val suppressedRanges = new mutable.HashMap[SourceFile, List[Position]]
+  private val normalizedPathCache = new mutable.HashMap[SourceFile, String]
 
   def setSuppressedRanges(source: SourceFile, ranges: List[Position]): Unit = {
     suppressedRanges(source) = ranges
@@ -29,17 +30,20 @@ class SuppressingReporter(original: Reporter, globalFilters: List[Regex], pathFi
   }
 
   protected def info0(pos: Position, msg: String, severity: Severity, force: Boolean): Unit = {
-    val absoluteFile = pos.source.file.file
-    val relativePathOpt = sourceRoots.collectFirst {
-      case sourceRoot if directoryContains(sourceRoot, absoluteFile) =>
-        sourceRoot.toURI.relativize(absoluteFile.toURI).getPath
+    def matchesPathFilter: Boolean = pathFilters.nonEmpty && {
+      val filePath = normalizedPathCache.getOrElseUpdate(pos.source, {
+        val absoluteFile = pos.source.file.file
+        val relIt = sourceRoots.iterator.flatMap(relativize(_, absoluteFile))
+        val relPath = if (relIt.hasNext) relIt.next() else absoluteFile.getAbsolutePath
+        relPath.replaceAllLiterally("\\", "/")
+      })
+      anyMatches(pathFilters, filePath)
     }
-    val relativePath = relativePathOpt.getOrElse(absoluteFile.getPath).replaceAllLiterally("\\", "/")
 
     severity match {
       case INFO =>
         original.info(pos, msg, force)
-      case WARNING if existsIn(pathFilters, relativePath) || existsIn(globalFilters, msg) =>
+      case WARNING if matchesPathFilter || anyMatches(globalFilters, msg) =>
         ()
       case WARNING if !pos.isDefined =>
         original.warning(pos, msg)
@@ -54,14 +58,14 @@ class SuppressingReporter(original: Reporter, globalFilters: List[Regex], pathFi
     updateCounts()
   }
 
-  @tailrec
-  private def directoryContains(dir: File, child: File): Boolean =
-    if(child == null) false
-    else if(dir == child) true
-    else directoryContains(dir, child.getParentFile)
+  private def relativize(dir: File, child: File): Option[String] = {
+    val childPath = child.getAbsolutePath
+    val dirPath = dir.getAbsolutePath + File.separator
+    if (childPath.startsWith(dirPath)) Some(childPath.substring(dirPath.length)) else None
+  }
 
-  private def existsIn(filters: List[Regex], source: String): Boolean =
-    filters.exists(_.findFirstIn(source).isDefined)
+  private def anyMatches(patterns: List[Regex], value: String): Boolean =
+    patterns.exists(_.findFirstIn(value).isDefined)
 
   private def updateCounts(): Unit = {
     INFO.count = original.INFO.count
