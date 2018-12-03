@@ -1,7 +1,8 @@
 package com.github.ghik.silencer
 
+import java.io.File
+import scala.collection.mutable.ListBuffer
 import scala.util.matching.Regex
-
 import scala.reflect.internal.util.Position
 import scala.tools.nsc.plugins.{Plugin, PluginComponent}
 import scala.tools.nsc.{Global, Phase}
@@ -10,27 +11,34 @@ class SilencerPlugin(val global: Global) extends Plugin { plugin =>
   val name = "silencer"
   val description = "Scala compiler plugin for warning suppression"
   val components: List[PluginComponent] = List(component)
-  private var globalFilters = List.empty[Regex]
+  private val globalFilters = ListBuffer.empty[Regex]
+  private val pathFilters = ListBuffer.empty[Regex]
+  private val sourceRoots = ListBuffer.empty[File]
 
   private lazy val reporter =
-    new SuppressingReporter(global.reporter, globalFilters)
+    new SuppressingReporter(global.reporter, globalFilters.result(), pathFilters.result(), sourceRoots.result())
+
+  private def split(s: String) = s.split(';')
 
   override def processOptions(options: List[String], error: String => Unit): Unit = {
-    options.foreach { opt =>
-      if (opt startsWith "globalFilters=") {
-        globalFilters = opt.drop(14).split(";").map(_.r).toList
-      }
-    }
-
-    if (globalFilters.nonEmpty) {
-      global.inform(s"""Silencer using global filters: ${globalFilters.mkString(",")}""")
-    }
+    options.foreach(_.split("=", 2) match {
+      case Array("globalFilters", pattern) =>
+        globalFilters ++= split(pattern).map(_.r)
+      case Array("pathFilters", pattern) =>
+        pathFilters ++= split(pattern).map(_.r)
+      case Array("sourceRoots", rootPaths) =>
+        sourceRoots ++= split(rootPaths).map(new File(_))
+      case _ =>
+    })
 
     global.reporter = reporter
   }
 
   override val optionsHelp: Option[String] = Some(
-    "  -P:silencer:globalFilters=...             Semi-colon separated patterns to filter the warning messages")
+    """  -P:silencer:globalFilters=...             Semi-colon separated regex patterns to filter the warning messages
+      |  -P:silencer:pathFilters=...               Semi-colon separated regex patterns to filter the source file paths
+      |  -P:silencer:sourceRoots=...               Semi-colon separated strings for detection of the source root
+    """.stripMargin)
 
   private object component extends PluginComponent {
     val global: plugin.global.type = plugin.global

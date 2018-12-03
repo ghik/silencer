@@ -42,6 +42,22 @@ You can also suppress warnings globally based on a warning message regex. In ord
 scalacOptions += "-P:silencer:globalFilters=[semi-colon separated message patterns]"
 ```
 
+Another option is to suppress warnings globally based on the source path. In order to do that, pass this option to `scalac`:
+
+```scala
+scalacOptions += "-P:silencer:pathFilters=[semi-colon separated file path patterns]"
+```
+
+Please note that in order to support reproducible builds, we've standardized on the file paths to use the UNIX filename separator `/`.
+Thus, when compiling the file path pattern, take into account that you must use the `/` separator instead of the `\` on environments that don't support it.
+
+
+Due to the fact that `scalac` can only determine absolute paths, you can add an option, to specify the source root path to filter out, before, the file path patterns are applied:
+
+```scala
+scalacOptions += "-P:silencer:sourceRoots=[semi-colon separated source root paths]"
+```
+
 ### Status
 
 Silencer is successfully being used in [AVSystem](https://github.com/AVSystem) open source and closed projects, e.g. [AVSystem  Scala Commons Library](https://github.com/AVSystem/scala-commons)
