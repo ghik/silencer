@@ -6,17 +6,17 @@ import org.scalatest.FunSuite
 
 import scala.io.Source
 import scala.reflect.io.VirtualDirectory
+import scala.tools.nsc.plugins.Plugin
 import scala.tools.nsc.reporters.ConsoleReporter
 import scala.tools.nsc.{Global, Settings}
 
-class SilencerPluginTest extends FunSuite { suite =>
+class SilencerPluginTest extends FunSuite {
+  suite =>
 
   val testdata = "silencer-plugin/testdata/"
   val settings = new Settings
 
   settings.deprecation.value = true
-
-
   settings.pluginOptions.value = settings.pluginOptions.value :+
     "silencer:globalFilters=depreFunc1\\ in\\ object\\ globallyFiltered\\ is\\ deprecated;useless.*filter" :+
     "silencer:pathFilters=.*ByPath" :+
@@ -34,8 +34,8 @@ class SilencerPluginTest extends FunSuite { suite =>
   settings.outputDirs.setSingleOutput(outDir)
   val reporter = new ConsoleReporter(settings)
 
-  val global = new Global(settings, reporter) { g =>
-    override protected def loadRoughPluginsList() =
+  val global: Global = new Global(settings, reporter) {
+    override protected def loadRoughPluginsList(): List[Plugin] =
       new SilencerPlugin(this) :: super.loadRoughPluginsList()
   }
 
