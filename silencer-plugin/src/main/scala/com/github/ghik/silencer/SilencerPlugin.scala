@@ -1,22 +1,22 @@
 package com.github.ghik.silencer
 
-import java.io.File
-
 import scala.collection.mutable.ListBuffer
 import scala.reflect.internal.util.Position
+import scala.reflect.io.AbstractFile
 import scala.tools.nsc.plugins.{Plugin, PluginComponent}
 import scala.tools.nsc.{Global, Phase}
 import scala.util.matching.Regex
 
-class SilencerPlugin(val global: Global) extends Plugin {
-  plugin =>
+class SilencerPlugin(val global: Global) extends Plugin { plugin =>
+  import global._
+
   val name = "silencer"
   val description = "Scala compiler plugin for warning suppression"
   val components: List[PluginComponent] = List(component)
 
   private val globalFilters = ListBuffer.empty[Regex]
   private val pathFilters = ListBuffer.empty[Regex]
-  private val sourceRoots = ListBuffer.empty[File]
+  private val sourceRoots = ListBuffer.empty[AbstractFile]
 
   private lazy val reporter =
     new SuppressingReporter(global.reporter, globalFilters.result(), pathFilters.result(), sourceRoots.result())
@@ -30,7 +30,13 @@ class SilencerPlugin(val global: Global) extends Plugin {
       case Array("pathFilters", pattern) =>
         pathFilters ++= split(pattern).map(_.r)
       case Array("sourceRoots", rootPaths) =>
-        sourceRoots ++= split(rootPaths).map(new File(_))
+        sourceRoots ++= split(rootPaths).flatMap { path =>
+          val res = Option(AbstractFile.getDirectory(path))
+          if (res.isEmpty) {
+            reporter.warning(NoPosition, s"Invalid source root: $path is not a directory")
+          }
+          res
+        }
       case _ =>
     })
 
@@ -48,8 +54,6 @@ class SilencerPlugin(val global: Global) extends Plugin {
     val runsAfter = List("typer")
     override val runsBefore = List("patmat")
     val phaseName = "silencer"
-
-    import global._
 
     private lazy val silentSym = try rootMirror.staticClass("com.github.ghik.silencer.silent") catch {
       case _: ScalaReflectionException =>
