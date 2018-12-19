@@ -8,6 +8,7 @@ import scala.tools.nsc.{Global, Phase}
 import scala.util.matching.Regex
 
 class SilencerPlugin(val global: Global) extends Plugin { plugin =>
+
   import global._
 
   val name = "silencer"
@@ -44,9 +45,9 @@ class SilencerPlugin(val global: Global) extends Plugin { plugin =>
   }
 
   override val optionsHelp: Option[String] = Some(
-    """  -P:silencer:globalFilters=...             Semicolon separated regexes for filtering warning messages globally
-      |  -P:silencer:pathFilters=...               Semicolon separated regexes for filtering source paths
-      |  -P:silencer:sourceRoots=...               Semicolon separated paths of source root directories
+    """  -P:silencer:globalFilters=...  Semicolon separated regexes for filtering warning messages globally
+      |  -P:silencer:pathFilters=...    Semicolon separated regexes for filtering source paths
+      |  -P:silencer:sourceRoots=...    Semicolon separated paths of source root directories to relativize path filters
     """.stripMargin)
 
   private object component extends PluginComponent {
