@@ -22,7 +22,7 @@ class SilencerPlugin(val global: Global) extends Plugin { plugin =>
   private lazy val reporter =
     new SuppressingReporter(global.reporter, globalFilters.result(), pathFilters.result(), sourceRoots.result())
 
-  private def split(s: String) = s.split(';')
+  private def split(s: String): Iterator[String] = s.split(';').iterator
 
   override def processOptions(options: List[String], error: String => Unit): Unit = {
     options.foreach(_.split("=", 2) match {
