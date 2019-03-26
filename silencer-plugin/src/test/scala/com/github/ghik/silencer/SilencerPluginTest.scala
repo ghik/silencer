@@ -10,8 +10,7 @@ import scala.tools.nsc.plugins.Plugin
 import scala.tools.nsc.reporters.ConsoleReporter
 import scala.tools.nsc.{Global, Settings}
 
-class SilencerPluginTest extends FunSuite {
-  suite =>
+class SilencerPluginTest extends FunSuite { suite =>
 
   val testdata = "silencer-plugin/testdata/"
   val settings = new Settings
