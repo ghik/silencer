@@ -8,8 +8,7 @@ import scala.tools.nsc.plugins.{Plugin, PluginComponent}
 import scala.tools.nsc.{Global, Phase}
 import scala.util.matching.Regex
 
-class SilencerPlugin(val global: Global) extends Plugin {
-  plugin =>
+class SilencerPlugin(val global: Global) extends Plugin { plugin =>
   val name = "silencer"
   val description = "Scala compiler plugin for warning suppression"
   val components: List[PluginComponent] = List(component)
@@ -53,10 +52,12 @@ class SilencerPlugin(val global: Global) extends Plugin {
 
     private lazy val silentSym = try rootMirror.staticClass("com.github.ghik.silencer.silent") catch {
       case _: ScalaReflectionException =>
-        plugin.reporter.warning(NoPosition,
-          "`silencer-plugin` was enabled but the @silent annotation was not found on classpath" +
-            " - have you added `silencer-lib` as a library dependency?"
-        )
+        if (globalFilters.isEmpty && pathFilters.isEmpty) {
+          plugin.reporter.warning(NoPosition,
+            "`silencer-plugin` was enabled but the @silent annotation was not found on classpath" +
+              " - have you added `silencer-lib` as a library dependency?"
+          )
+        }
         NoSymbol
     }
 
