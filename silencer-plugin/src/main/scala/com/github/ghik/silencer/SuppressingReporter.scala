@@ -5,10 +5,16 @@ import java.io.File
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import scala.reflect.internal.util.{Position, SourceFile}
+import scala.reflect.io.AbstractFile
 import scala.tools.nsc.reporters.Reporter
 import scala.util.matching.Regex
 
-class SuppressingReporter(original: Reporter, globalFilters: List[Regex], pathFilters: List[Regex], sourceRoots: List[File]) extends Reporter {
+class SuppressingReporter(
+  original: Reporter,
+  globalFilters: List[Regex],
+  pathFilters: List[Regex],
+  sourceRoots: List[AbstractFile]
+) extends Reporter {
 
   private val deferredWarnings = new mutable.HashMap[SourceFile, ArrayBuffer[(Position, String)]]
   private val suppressedRanges = new mutable.HashMap[SourceFile, List[Position]]
@@ -32,9 +38,9 @@ class SuppressingReporter(original: Reporter, globalFilters: List[Regex], pathFi
   protected def info0(pos: Position, msg: String, severity: Severity, force: Boolean): Unit = {
     def matchesPathFilter: Boolean = pathFilters.nonEmpty && {
       val filePath = normalizedPathCache.getOrElseUpdate(pos.source, {
-        val file = pos.source.file.file
+        val file = pos.source.file
         val relIt = sourceRoots.iterator.flatMap(relativize(_, file))
-        val relPath = if (relIt.hasNext) relIt.next() else file.getPath
+        val relPath = if (relIt.hasNext) relIt.next() else file.canonicalPath
         relPath.replaceAllLiterally("\\", "/")
       })
       anyMatches(pathFilters, filePath)
@@ -58,9 +64,9 @@ class SuppressingReporter(original: Reporter, globalFilters: List[Regex], pathFi
     updateCounts()
   }
 
-  private def relativize(dir: File, child: File): Option[String] = {
-    val childPath = child.getCanonicalPath
-    val dirPath = dir.getCanonicalPath + File.separator
+  private def relativize(dir: AbstractFile, child: AbstractFile): Option[String] = {
+    val childPath = child.canonicalPath
+    val dirPath = dir.canonicalPath + File.separator
     if (childPath.startsWith(dirPath)) Some(childPath.substring(dirPath.length)) else None
   }
 

@@ -10,8 +10,6 @@ Scala has no local warning suppression (see e.g. [scala/bug/issues/1781](https:/
 If you're using SBT, simply add these lines to your `build.sbt` to enable the plugin:
 
 ```scala
-val silencerVersion = "1.3.0"
-
 libraryDependencies ++= Seq(
   compilerPlugin("com.github.ghik" %% "silencer-plugin" % silencerVersion),
   "com.github.ghik" %% "silencer-lib" % silencerVersion % Provided
@@ -55,13 +53,13 @@ scalacOptions += "-P:silencer:pathFilters=[semi-colon separated file path patter
 By default, absolute file path is matched against path patterns. In order to make your build independent of where your project is checked out, you can specify a list of source root directories. Source file paths will be relativized with respect to them  before being matched against path patterns. Usually it should be enough to pass project base directory as source root (i.e. `baseDirectory.value` in SBT):
 
 ```scala
-scalacOptions += s"-P:silencer:sourceRoots=${baseDirectory.value}"
+scalacOptions += s"-P:silencer:sourceRoots=${baseDirectory.value.getCanonicalPath}"
 ```
 
 Another good choice for source roots may be actual SBT source directories:
 
 ```scala
-scalacOptions += s"-P:silencer:sourceRoots=${sourceDirectories.value.mkString(";")}"
+scalacOptions += s"-P:silencer:sourceRoots=${sourceDirectories.value.map(_.getCanonicalPath).mkString(";")}"
 ```
 
 ### Status
