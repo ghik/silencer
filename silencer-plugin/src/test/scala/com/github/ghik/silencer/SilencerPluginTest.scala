@@ -9,6 +9,7 @@ import scala.reflect.io.VirtualDirectory
 import scala.tools.nsc.plugins.Plugin
 import scala.tools.nsc.reporters.ConsoleReporter
 import scala.tools.nsc.{Global, Settings}
+import scala.util.Properties
 
 class SilencerPluginTest extends FunSuite { suite =>
 
@@ -53,6 +54,10 @@ class SilencerPluginTest extends FunSuite { suite =>
     assertWarnings(expectedWarnings)
   }
 
+  // looks like macro args are not linted at all in 2.13
+  val macroExpandeeWarnings: Int =
+    if (Properties.versionString.contains("2.13")) 0 else 1
+
   test("unsuppressed") {
     testFile("unsuppressed.scala", 1)
   }
@@ -72,7 +77,7 @@ class SilencerPluginTest extends FunSuite { suite =>
     testFile("lateWarning.scala", 1)
   }
   test("macro expandee") {
-    testFile("macroExpandeeSuppression.scala", 1)
+    testFile("macroExpandeeSuppression.scala", macroExpandeeWarnings)
   }
   test("global filters") {
     testFile("globallyFiltered.scala", 1)
@@ -84,6 +89,6 @@ class SilencerPluginTest extends FunSuite { suite =>
   test("multiple files compilation") {
     val files = new File(testdata).listFiles().filter(_.isFile).map(_.getName)
     compile(files: _*)
-    assertWarnings(files.length - 1) // one is excluded by path
+    assertWarnings(files.length - 1 + macroExpandeeWarnings - 1) // one is excluded by path
   }
 }
