@@ -15,6 +15,28 @@ libraryDependencies ++= Seq(
   "com.github.ghik" %% "silencer-lib" % silencerVersion % Provided
 )
 ```
+
+If you're using Gradle:
+
+```groovy
+ext {
+    scalaBinaryVersion = "..." // e.g. "2.12"
+    silencerVersion = "..." // appropriate silencer version
+}
+configurations {
+    scalacPlugins {
+        transitive = false
+    }
+}
+dependencies {
+    compile "com.github.ghik:silencer-lib_$scalaBinaryVersion:$silencerVersion"
+    scalacPlugins "com.github.ghik:silencer-plugin_$scalaBinaryVersion:$silencerVersion"
+}
+tasks.withType(ScalaCompile) {
+    scalaCompileOptions.additionalParameters =
+            configurations.scalacPlugins.collect { "-Xplugin:" + it.absolutePath }
+}
+```
     
 Silencer currently works with Scala 2.11.4+, 2.12.0+ and 2.13.0-M4+. Also note that since both `silencer-plugin` and `silencer-lib` are compile time only dependencies, Silencer can also be used in ScalaJS and Scala Native without having to be cross compiled for it.
 
