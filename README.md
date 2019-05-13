@@ -24,17 +24,17 @@ ext {
     silencerVersion = "..." // appropriate silencer version
 }
 configurations {
-    scalacPlugins {
+    scalacPlugin {
         transitive = false
     }
 }
 dependencies {
     compile "com.github.ghik:silencer-lib_$scalaBinaryVersion:$silencerVersion"
-    scalacPlugins "com.github.ghik:silencer-plugin_$scalaBinaryVersion:$silencerVersion"
+    scalacPlugin "com.github.ghik:silencer-plugin_$scalaBinaryVersion:$silencerVersion"
 }
 tasks.withType(ScalaCompile) {
     scalaCompileOptions.additionalParameters =
-            configurations.scalacPlugins.collect { "-Xplugin:" + it.absolutePath }
+            configurations.scalacPlugin.collect { "-Xplugin:" + it.absolutePath }
 }
 ```
     
