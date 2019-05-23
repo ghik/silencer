@@ -77,7 +77,6 @@ class SilencerPlugin(val global: Global) extends Plugin { plugin =>
         def isSilentAnnot(tree: Tree) =
           tree.tpe != null && tree.tpe <:< silentAnnotType
 
-        val suppressedRangesBuffer = collection.mutable.ListBuffer[Position]()
         def treeRangePos(tree: Tree): Position = {
           // compute approximate range
           var start = unit.source.length
@@ -92,11 +91,13 @@ class SilencerPlugin(val global: Global) extends Plugin { plugin =>
           end = end max start
           Position.range(unit.source, start, start, end)
         }
-        def addSuppressed(t: Tree) = {
+
+        val suppressedRangesBuffer = new ListBuffer[Position]
+        def addSuppressed(t: Tree): Unit =
           suppressedRangesBuffer += treeRangePos(t)
-        }
+
         object FindSuppressed extends Traverser {
-          override def traverse(t: Tree) = {
+          override def traverse(t: Tree): Unit = {
             val expandee = analyzer.macroExpandee(t)
             if (expandee != EmptyTree && expandee != t) traverse(expandee)
 
