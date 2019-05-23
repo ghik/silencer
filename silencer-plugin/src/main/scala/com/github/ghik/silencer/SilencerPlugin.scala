@@ -77,19 +77,7 @@ class SilencerPlugin(val global: Global) extends Plugin { plugin =>
         def isSilentAnnot(tree: Tree) =
           tree.tpe != null && tree.tpe <:< silentAnnotType
 
-        def suppressedTree(tree: Tree) = tree match {
-          case Annotated(annot, arg) if isSilentAnnot(annot) => Some(arg)
-          case typed@Typed(_, tpt) if tpt.tpe != null && tpt.tpe.annotations.exists(ai => isSilentAnnot(ai.tree)) => Some(typed)
-          case md: MemberDef if md.symbol.annotations.exists(ai => isSilentAnnot(ai.tree)) => Some(md)
-          case _ => None
-        }
-
-        def allTrees(tree: Tree): Iterator[Tree] =
-          Iterator(tree, analyzer.macroExpandee(tree)).filter(_ != EmptyTree)
-            .flatMap(t => Iterator(t) ++ t.children.iterator.flatMap(allTrees))
-
-        val suppressedTrees = allTrees(unit.body).flatMap(suppressedTree).toList
-
+        val suppressedRangesBuffer = collection.mutable.ListBuffer[Position]()
         def treeRangePos(tree: Tree): Position = {
           // compute approximate range
           var start = unit.source.length
@@ -104,8 +92,29 @@ class SilencerPlugin(val global: Global) extends Plugin { plugin =>
           end = end max start
           Position.range(unit.source, start, start, end)
         }
+        def addSuppressed(t: Tree) = {
+          suppressedRangesBuffer += treeRangePos(t)
+        }
+        object FindSuppressed extends Traverser {
+          override def traverse(t: Tree) = {
+            val expandee = analyzer.macroExpandee(t)
+            if (expandee != EmptyTree && expandee != t) traverse(expandee)
 
-        suppressedTrees.map(treeRangePos)
+            t match {
+              case Annotated(annot, arg) if isSilentAnnot(annot) =>
+                addSuppressed(arg)
+              case typed@Typed(_, tpt) if tpt.tpe != null && tpt.tpe.annotations.exists(ai => isSilentAnnot(ai.tree)) =>
+                addSuppressed(typed)
+              case md: MemberDef if md.symbol.annotations.exists(ai => isSilentAnnot(ai.tree)) =>
+                addSuppressed(md)
+              case _ =>
+            }
+            super.traverse(t)
+          }
+        }
+        FindSuppressed.traverse(unit.body)
+
+        suppressedRangesBuffer.toList
       }
 
       plugin.reporter.setSuppressedRanges(unit.source, suppressedRanges)
