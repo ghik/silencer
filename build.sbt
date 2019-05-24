@@ -6,7 +6,7 @@ val saveTestClasspath = taskKey[File](
 
 val commonSettings = Seq(
   organization := "com.github.ghik",
-  version := "1.3.3",
+  version := "1.3.4",
   scalaVersion := "2.12.8",
   crossScalaVersions := Seq("2.11.12", scalaVersion.value, "2.13.0-RC2"),
   projectInfo := ModuleInfo(
