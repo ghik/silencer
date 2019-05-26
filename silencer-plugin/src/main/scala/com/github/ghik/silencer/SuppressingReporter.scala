@@ -17,12 +17,12 @@ class SuppressingReporter(
 ) extends Reporter {
 
   private val deferredWarnings = new mutable.HashMap[SourceFile, ArrayBuffer[(Position, String)]]
-  private val suppressedRanges = new mutable.HashMap[SourceFile, List[Position]]
+  private val fileSuppressions = new mutable.HashMap[SourceFile, List[Suppression]]
   private val normalizedPathCache = new mutable.HashMap[SourceFile, String]
 
-  def setSuppressedRanges(source: SourceFile, ranges: List[Position]): Unit = {
-    suppressedRanges(source) = ranges
-    for ((pos, msg) <- deferredWarnings.remove(source).getOrElse(Seq.empty) if !ranges.exists(_.includes(pos))) {
+  def setSuppressions(source: SourceFile, suppressions: List[Suppression]): Unit = {
+    fileSuppressions(source) = suppressions
+    for ((pos, msg) <- deferredWarnings.remove(source).getOrElse(Seq.empty) if !suppressions.exists(_.suppresses(pos, msg))) {
       original.warning(pos, msg)
     }
     updateCounts()
@@ -32,7 +32,7 @@ class SuppressingReporter(
     super.reset()
     original.reset()
     deferredWarnings.clear()
-    suppressedRanges.clear()
+    fileSuppressions.clear()
   }
 
   protected def info0(pos: Position, msg: String, severity: Severity, force: Boolean): Unit = {
@@ -53,13 +53,14 @@ class SuppressingReporter(
         ()
       case WARNING if !pos.isDefined =>
         original.warning(pos, msg)
-      case WARNING if !suppressedRanges.contains(pos.source) =>
+      case WARNING if !fileSuppressions.contains(pos.source) =>
         deferredWarnings.getOrElseUpdate(pos.source, new ArrayBuffer) += ((pos, msg))
-      case WARNING if suppressedRanges(pos.source).exists(_.includes(pos)) =>
+      case WARNING if fileSuppressions(pos.source).exists(_.suppresses(pos, msg)) =>
         ()
       case WARNING =>
         original.warning(pos, msg)
-      case ERROR => original.error(pos, msg)
+      case ERROR =>
+        original.error(pos, msg)
     }
     updateCounts()
   }
@@ -79,7 +80,7 @@ class SuppressingReporter(
     ERROR.count = original.ERROR.count
   }
 
-  private def originalSeverity(severity: Severity) = severity match {
+  private def originalSeverity(severity: Severity): original.Severity = severity match {
     case INFO => original.INFO
     case WARNING => original.WARNING
     case ERROR => original.ERROR

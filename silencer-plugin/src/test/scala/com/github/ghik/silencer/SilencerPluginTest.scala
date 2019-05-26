@@ -2,7 +2,7 @@ package com.github.ghik.silencer
 
 import java.io.File
 
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 
 import scala.io.Source
 import scala.reflect.io.VirtualDirectory
@@ -11,7 +11,7 @@ import scala.tools.nsc.reporters.ConsoleReporter
 import scala.tools.nsc.{Global, Settings}
 import scala.util.Properties
 
-class SilencerPluginTest extends FunSuite { suite =>
+class SilencerPluginTest extends AnyFunSuite { suite =>
 
   val testdata = "silencer-plugin/testdata/"
   val settings = new Settings
@@ -78,6 +78,9 @@ class SilencerPluginTest extends FunSuite { suite =>
   }
   test("macro expandee") {
     testFile("macroExpandeeSuppression.scala", macroExpandeeWarnings)
+  }
+  test("message patterns") {
+    testFile("messagePatterns.scala", 1)
   }
   test("global filters") {
     testFile("globallyFiltered.scala", 1)

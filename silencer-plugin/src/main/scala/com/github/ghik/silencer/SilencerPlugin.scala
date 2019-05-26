@@ -1,5 +1,7 @@
 package com.github.ghik.silencer
 
+import java.util.regex.PatternSyntaxException
+
 import scala.collection.mutable.ListBuffer
 import scala.reflect.internal.util.Position
 import scala.reflect.io.AbstractFile
@@ -72,10 +74,27 @@ class SilencerPlugin(val global: Global) extends Plugin { plugin =>
     }
 
     def applySuppressions(unit: CompilationUnit): Unit = {
-      val suppressedRanges = if (silentSym == NoSymbol) Nil else {
+      val suppressions = if (silentSym == NoSymbol) Nil else {
         val silentAnnotType = TypeRef(NoType, silentSym, Nil)
         def isSilentAnnot(tree: Tree) =
           tree.tpe != null && tree.tpe <:< silentAnnotType
+
+        def mkSuppression(tree: Tree, annot: Tree): Suppression = {
+          val range = treeRangePos(tree)
+          val msgPattern = annot match {
+            case Apply(_, Nil) => None
+            case Apply(_, List(lit@Literal(Constant(regex: String)))) =>
+              try Some(regex.r) catch {
+                case pse: PatternSyntaxException =>
+                  reporter.error(lit.pos, s"invalid message pattern $regex in @silent annotation: ${pse.getMessage}")
+                  None
+              }
+            case _ =>
+              reporter.error(tree.pos, "expected literal string as @silent annotation argument")
+              None
+          }
+          new Suppression(range, msgPattern)
+        }
 
         def treeRangePos(tree: Tree): Position = {
           // compute approximate range
@@ -92,33 +111,36 @@ class SilencerPlugin(val global: Global) extends Plugin { plugin =>
           Position.range(unit.source, start, start, end)
         }
 
-        val suppressedRangesBuffer = new ListBuffer[Position]
-        def addSuppressed(t: Tree): Unit =
-          suppressedRangesBuffer += treeRangePos(t)
+        val suppressionsBuf = new ListBuffer[Suppression]
 
-        object FindSuppressed extends Traverser {
+        def addSuppression(tree: Tree, annot: Tree): Unit =
+          if (isSilentAnnot(annot)) {
+            suppressionsBuf += mkSuppression(tree, annot)
+          }
+
+        object FindSuppressions extends Traverser {
           override def traverse(t: Tree): Unit = {
             val expandee = analyzer.macroExpandee(t)
             if (expandee != EmptyTree && expandee != t) traverse(expandee)
 
             t match {
-              case Annotated(annot, arg) if isSilentAnnot(annot) =>
-                addSuppressed(arg)
-              case typed@Typed(_, tpt) if tpt.tpe != null && tpt.tpe.annotations.exists(ai => isSilentAnnot(ai.tree)) =>
-                addSuppressed(typed)
-              case md: MemberDef if md.symbol.annotations.exists(ai => isSilentAnnot(ai.tree)) =>
-                addSuppressed(md)
+              case Annotated(annot, arg) =>
+                addSuppression(arg, annot)
+              case typed@Typed(_, tpt) if tpt.tpe != null =>
+                tpt.tpe.annotations.foreach(ai => addSuppression(typed, ai.tree))
+              case md: MemberDef =>
+                md.symbol.annotations.foreach(ai => addSuppression(md, ai.tree))
               case _ =>
             }
             super.traverse(t)
           }
         }
-        FindSuppressed.traverse(unit.body)
 
-        suppressedRangesBuffer.toList
+        FindSuppressions.traverse(unit.body)
+        suppressionsBuf.toList
       }
 
-      plugin.reporter.setSuppressedRanges(unit.source, suppressedRanges)
+      plugin.reporter.setSuppressions(unit.source, suppressions)
     }
   }
 
