@@ -2,6 +2,7 @@ package com.github.ghik.silencer
 
 import java.util.regex.PatternSyntaxException
 
+import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 import scala.reflect.internal.util.Position
 import scala.reflect.io.AbstractFile
@@ -86,20 +87,19 @@ class SilencerPlugin(val global: Global) extends Plugin { plugin =>
 
         def mkSuppression(tree: Tree, annot: Tree, annotPos: Position, inMacroExpansion: Boolean): Suppression = {
           val range = treeRangePos(tree)
-          val actualAnnotPos = if (annotPos != NoPosition) annotPos else range
           val msgPattern = annot match {
             case Apply(_, Nil) => None
             case Apply(_, List(Literal(Constant(regex: String)))) =>
               try Some(regex.r) catch {
                 case pse: PatternSyntaxException =>
-                  reporter.error(actualAnnotPos, s"invalid message pattern $regex in @silent annotation: ${pse.getMessage}")
+                  reporter.error(annotPos, s"invalid message pattern $regex in @silent annotation: ${pse.getMessage}")
                   None
               }
             case _ =>
-              reporter.error(actualAnnotPos, "expected literal string as @silent annotation argument")
+              reporter.error(annotPos, "expected literal string as @silent annotation argument")
               None
           }
-          new Suppression(actualAnnotPos, range, msgPattern, inMacroExpansion)
+          new Suppression(annotPos, range, msgPattern, inMacroExpansion)
         }
 
         def treeRangePos(tree: Tree): Position = {
@@ -120,12 +120,15 @@ class SilencerPlugin(val global: Global) extends Plugin { plugin =>
         val suppressionsBuf = new ListBuffer[Suppression]
 
         object FindSuppressions extends Traverser {
+          private val suppressionPositionsVisited = new mutable.HashSet[Position]
           private var inMacroExpansion: Boolean = false
 
-          private def addSuppression(tree: Tree, annot: Tree, annotPos: Position): Unit =
-            if (isSilentAnnot(annot)) {
-              suppressionsBuf += mkSuppression(tree, annot, annotPos, inMacroExpansion)
+          private def addSuppression(tree: Tree, annot: Tree, annotPos: Position): Unit = {
+            val actualAnnotPos = if (annotPos != NoPosition) annotPos else tree.pos
+            if (isSilentAnnot(annot) && suppressionPositionsVisited.add(actualAnnotPos)) {
+              suppressionsBuf += mkSuppression(tree, annot, actualAnnotPos, inMacroExpansion)
             }
+          }
 
           override def traverse(t: Tree): Unit = {
             val expandee = analyzer.macroExpandee(t)
