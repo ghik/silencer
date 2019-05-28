@@ -20,13 +20,25 @@ class SuppressingReporter(
   private val fileSuppressions = new mutable.HashMap[SourceFile, List[Suppression]]
   private val normalizedPathCache = new mutable.HashMap[SourceFile, String]
 
+  //Suppressions are sorted by end offset of their suppression ranges so that nested suppressions come before
+  //their containing suppressions. This is ensured by FindSuppressions traverser in SilencerPlugin.
+  //This order is important for proper unused @silent annotation detection.
+  def suppressOrForward(suppressions: List[Suppression], pos: Position, msg: String): Unit =
+    suppressions.find(_.suppresses(pos, msg)) match {
+      case Some(suppression) => suppression.used = true
+      case None => original.warning(pos, msg)
+    }
+
   def setSuppressions(source: SourceFile, suppressions: List[Suppression]): Unit = {
     fileSuppressions(source) = suppressions
-    for ((pos, msg) <- deferredWarnings.remove(source).getOrElse(Seq.empty) if !suppressions.exists(_.suppresses(pos, msg))) {
-      original.warning(pos, msg)
+    for ((pos, msg) <- deferredWarnings.remove(source).getOrElse(Seq.empty)) {
+      suppressOrForward(suppressions, pos, msg)
     }
     updateCounts()
   }
+
+  def checkUnused(source: SourceFile): Unit =
+    fileSuppressions(source).foreach(_.reportUnused(this))
 
   override def reset(): Unit = {
     super.reset()
@@ -55,10 +67,8 @@ class SuppressingReporter(
         original.warning(pos, msg)
       case WARNING if !fileSuppressions.contains(pos.source) =>
         deferredWarnings.getOrElseUpdate(pos.source, new ArrayBuffer) += ((pos, msg))
-      case WARNING if fileSuppressions(pos.source).exists(_.suppresses(pos, msg)) =>
-        ()
       case WARNING =>
-        original.warning(pos, msg)
+        suppressOrForward(fileSuppressions(pos.source), pos, msg)
       case ERROR =>
         original.error(pos, msg)
     }

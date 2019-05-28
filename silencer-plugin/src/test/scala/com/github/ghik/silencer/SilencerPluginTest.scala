@@ -11,16 +11,13 @@ import scala.tools.nsc.reporters.ConsoleReporter
 import scala.tools.nsc.{Global, Settings}
 import scala.util.Properties
 
-class SilencerPluginTest extends AnyFunSuite { suite =>
+abstract class SilencerPluginTest(options: String*) extends AnyFunSuite { suite =>
 
   val testdata = "silencer-plugin/testdata/"
   val settings = new Settings
 
   settings.deprecation.value = true
-  settings.pluginOptions.value = settings.pluginOptions.value :+
-    "silencer:globalFilters=depreFunc1\\ in\\ object\\ globallyFiltered\\ is\\ deprecated;useless.*filter" :+
-    "silencer:pathFilters=.*ByPath;inner/unfiltered.scala" :+
-    "silencer:sourceRoots=silencer-plugin/testdata/inner"
+  settings.pluginOptions.value = settings.pluginOptions.value ++ options.map(o => s"silencer:$o")
 
   Option(getClass.getResourceAsStream("/embeddedcp")) match {
     case Some(is) =>
@@ -40,24 +37,29 @@ class SilencerPluginTest extends AnyFunSuite { suite =>
   }
 
   def compile(filenames: String*): Unit = {
+    reporter.reset()
     val run = new global.Run
     run.compile(filenames.toList.map(testdata + _))
   }
 
-  def assertWarnings(count: Int): Unit = {
-    assert(!reporter.hasErrors)
+  def assertWarnings(count: Int): Unit =
     assert(count === reporter.warningCount)
-  }
 
-  def testFile(filename: String, expectedWarnings: Int = 0): Unit = {
+  def assertErrors(count: Int): Unit =
+    assert(count === reporter.errorCount)
+
+  def testFile(filename: String, expectedWarnings: Int = 0, expectedErrors: Int = 0): Unit = {
     compile(filename)
+    assertErrors(expectedErrors)
     assertWarnings(expectedWarnings)
   }
 
   // looks like macro args are not linted at all in 2.13
   val macroExpandeeWarnings: Int =
     if (Properties.versionString.contains("2.13")) 0 else 1
+}
 
+class AnnotationSuppressionTest extends SilencerPluginTest {
   test("unsuppressed") {
     testFile("unsuppressed.scala", 1)
   }
@@ -82,6 +84,18 @@ class SilencerPluginTest extends AnyFunSuite { suite =>
   test("message patterns") {
     testFile("messagePatterns.scala", 1)
   }
+
+  test("multiple files compilation") {
+    compile("unsuppressed.scala", "statementSuppression.scala", "localValueSuppression.scala")
+    assertWarnings(3)
+  }
+}
+
+class GlobalSuppressionTest extends SilencerPluginTest(
+  "globalFilters=depreFunc1\\ in\\ object\\ globallyFiltered\\ is\\ deprecated;useless.*filter",
+  "pathFilters=.*ByPath;inner/unfiltered.scala",
+  "sourceRoots=silencer-plugin/testdata/inner"
+) {
   test("global filters") {
     testFile("globallyFiltered.scala", 1)
   }
@@ -89,9 +103,10 @@ class SilencerPluginTest extends AnyFunSuite { suite =>
     testFile(s"inner${File.separator}globallyFilteredByPath.scala")
     testFile(s"inner${File.separator}unfiltered.scala", 2)
   }
-  test("multiple files compilation") {
-    val files = new File(testdata).listFiles().filter(_.isFile).map(_.getName)
-    compile(files: _*)
-    assertWarnings(files.length - 1 + macroExpandeeWarnings - 1) // one is excluded by path
+}
+
+class UnusedSuppressionTest extends SilencerPluginTest("checkUnused") {
+  test("unused suppressions") {
+    testFile("unusedSuppressions.scala", expectedErrors = 2)
   }
 }

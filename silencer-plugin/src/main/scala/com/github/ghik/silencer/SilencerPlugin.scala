@@ -15,11 +15,12 @@ class SilencerPlugin(val global: Global) extends Plugin { plugin =>
 
   val name = "silencer"
   val description = "Scala compiler plugin for warning suppression"
-  val components: List[PluginComponent] = List(component)
+  val components: List[PluginComponent] = List(extractSuppressions, checkUnusedSuppressions)
 
   private val globalFilters = ListBuffer.empty[Regex]
   private val pathFilters = ListBuffer.empty[Regex]
   private val sourceRoots = ListBuffer.empty[AbstractFile]
+  private var checkUnused = false
 
   private lazy val reporter =
     new SuppressingReporter(global.reporter, globalFilters.result(), pathFilters.result(), sourceRoots.result())
@@ -40,6 +41,8 @@ class SilencerPlugin(val global: Global) extends Plugin { plugin =>
           }
           res
         }
+      case Array("checkUnused") =>
+        checkUnused = true
       case _ =>
     })
 
@@ -50,13 +53,15 @@ class SilencerPlugin(val global: Global) extends Plugin { plugin =>
     """  -P:silencer:globalFilters=...  Semicolon separated regexes for filtering warning messages globally
       |  -P:silencer:pathFilters=...    Semicolon separated regexes for filtering source paths
       |  -P:silencer:sourceRoots=...    Semicolon separated paths of source root directories to relativize path filters
+      |  -P:silencer:checkUnused        Enables checking whether @silence annotation actually suppressed anything
     """.stripMargin)
 
-  private object component extends PluginComponent {
+  private object extractSuppressions extends PluginComponent {
     val global: plugin.global.type = plugin.global
     val runsAfter = List("typer")
     override val runsBefore = List("patmat")
     val phaseName = "silencer"
+    override def description: String = "inspect @silent annotations for warning suppression"
 
     private lazy val silentSym = try rootMirror.staticClass("com.github.ghik.silencer.silent") catch {
       case _: ScalaReflectionException =>
@@ -79,7 +84,7 @@ class SilencerPlugin(val global: Global) extends Plugin { plugin =>
         def isSilentAnnot(tree: Tree) =
           tree.tpe != null && tree.tpe <:< silentAnnotType
 
-        def mkSuppression(tree: Tree, annot: Tree): Suppression = {
+        def mkSuppression(tree: Tree, annot: Tree, annotPos: Position, inMacroExpansion: Boolean): Suppression = {
           val range = treeRangePos(tree)
           val msgPattern = annot match {
             case Apply(_, Nil) => None
@@ -93,7 +98,8 @@ class SilencerPlugin(val global: Global) extends Plugin { plugin =>
               reporter.error(tree.pos, "expected literal string as @silent annotation argument")
               None
           }
-          new Suppression(range, msgPattern)
+          val actualAnnotPos = if (annotPos != NoPosition) annotPos else annot.pos
+          new Suppression(actualAnnotPos, range, msgPattern, inMacroExpansion)
         }
 
         def treeRangePos(tree: Tree): Position = {
@@ -113,26 +119,38 @@ class SilencerPlugin(val global: Global) extends Plugin { plugin =>
 
         val suppressionsBuf = new ListBuffer[Suppression]
 
-        def addSuppression(tree: Tree, annot: Tree): Unit =
-          if (isSilentAnnot(annot)) {
-            suppressionsBuf += mkSuppression(tree, annot)
-          }
-
         object FindSuppressions extends Traverser {
+          private var inMacroExpansion: Boolean = false
+
+          private def addSuppression(tree: Tree, annot: Tree, annotPos: Position): Unit =
+            if (isSilentAnnot(annot)) {
+              suppressionsBuf += mkSuppression(tree, annot, annotPos, inMacroExpansion)
+            }
+
           override def traverse(t: Tree): Unit = {
             val expandee = analyzer.macroExpandee(t)
-            if (expandee != EmptyTree && expandee != t) traverse(expandee)
+            val macroExpansion = expandee != EmptyTree && expandee != t
+            if (macroExpansion) {
+              traverse(expandee)
+            }
 
+            val wasInMacroExpansion = inMacroExpansion
+            inMacroExpansion = inMacroExpansion || macroExpansion
+
+            //NOTE: it's important to first traverse the children so that nested suppression ranges come before
+            //containing suppression ranges
+            super.traverse(t)
             t match {
               case Annotated(annot, arg) =>
-                addSuppression(arg, annot)
+                addSuppression(arg, annot, annot.pos)
               case typed@Typed(_, tpt) if tpt.tpe != null =>
-                tpt.tpe.annotations.foreach(ai => addSuppression(typed, ai.tree))
+                tpt.tpe.annotations.foreach(ai => addSuppression(typed, ai.tree, ai.pos))
               case md: MemberDef =>
-                md.symbol.annotations.foreach(ai => addSuppression(md, ai.tree))
+                md.symbol.annotations.foreach(ai => addSuppression(md, ai.tree, ai.pos))
               case _ =>
             }
-            super.traverse(t)
+
+            inMacroExpansion = wasInMacroExpansion
           }
         }
 
@@ -144,4 +162,18 @@ class SilencerPlugin(val global: Global) extends Plugin { plugin =>
     }
   }
 
+  private object checkUnusedSuppressions extends PluginComponent {
+    val global: plugin.global.type = plugin.global
+    val runsAfter = List("jvm")
+    override val runsBefore = List("terminal")
+    val phaseName = "silencerCheckUnused"
+    override def description: String = "report unused @silent annotations"
+
+    def newPhase(prev: Phase): StdPhase = new StdPhase(prev) {
+      def apply(unit: CompilationUnit): Unit =
+        if (checkUnused) {
+          reporter.checkUnused(unit.source)
+        }
+    }
+  }
 }
