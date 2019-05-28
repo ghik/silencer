@@ -53,7 +53,7 @@ class SilencerPlugin(val global: Global) extends Plugin { plugin =>
     """  -P:silencer:globalFilters=...  Semicolon separated regexes for filtering warning messages globally
       |  -P:silencer:pathFilters=...    Semicolon separated regexes for filtering source paths
       |  -P:silencer:sourceRoots=...    Semicolon separated paths of source root directories to relativize path filters
-      |  -P:silencer:checkUnused        Enables checking whether @silence annotation actually suppressed anything
+      |  -P:silencer:checkUnused        Enables reporting of unused @silent annotations
     """.stripMargin)
 
   private object extractSuppressions extends PluginComponent {
