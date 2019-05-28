@@ -86,19 +86,19 @@ class SilencerPlugin(val global: Global) extends Plugin { plugin =>
 
         def mkSuppression(tree: Tree, annot: Tree, annotPos: Position, inMacroExpansion: Boolean): Suppression = {
           val range = treeRangePos(tree)
+          val actualAnnotPos = if (annotPos != NoPosition) annotPos else annot.pos
           val msgPattern = annot match {
             case Apply(_, Nil) => None
-            case Apply(_, List(lit@Literal(Constant(regex: String)))) =>
+            case Apply(_, List(Literal(Constant(regex: String)))) =>
               try Some(regex.r) catch {
                 case pse: PatternSyntaxException =>
-                  reporter.error(lit.pos, s"invalid message pattern $regex in @silent annotation: ${pse.getMessage}")
+                  reporter.error(actualAnnotPos, s"invalid message pattern $regex in @silent annotation: ${pse.getMessage}")
                   None
               }
             case _ =>
-              reporter.error(tree.pos, "expected literal string as @silent annotation argument")
+              reporter.error(actualAnnotPos, "expected literal string as @silent annotation argument")
               None
           }
-          val actualAnnotPos = if (annotPos != NoPosition) annotPos else annot.pos
           new Suppression(actualAnnotPos, range, msgPattern, inMacroExpansion)
         }
 
