@@ -86,7 +86,7 @@ class SilencerPlugin(val global: Global) extends Plugin { plugin =>
 
         def mkSuppression(tree: Tree, annot: Tree, annotPos: Position, inMacroExpansion: Boolean): Suppression = {
           val range = treeRangePos(tree)
-          val actualAnnotPos = if (annotPos != NoPosition) annotPos else annot.pos
+          val actualAnnotPos = if (annotPos != NoPosition) annotPos else range
           val msgPattern = annot match {
             case Apply(_, Nil) => None
             case Apply(_, List(Literal(Constant(regex: String)))) =>
