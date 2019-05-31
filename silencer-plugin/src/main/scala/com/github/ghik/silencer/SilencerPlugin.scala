@@ -120,12 +120,12 @@ class SilencerPlugin(val global: Global) extends Plugin { plugin =>
         val suppressionsBuf = new ListBuffer[Suppression]
 
         object FindSuppressions extends Traverser {
-          private val suppressionPositionsVisited = new mutable.HashSet[Position]
+          private val suppressionPositionsVisited = new mutable.HashSet[Int]
           private var inMacroExpansion: Boolean = false
 
           private def addSuppression(tree: Tree, annot: Tree, annotPos: Position): Unit = {
             val actualAnnotPos = if (annotPos != NoPosition) annotPos else tree.pos
-            if (isSilentAnnot(annot) && suppressionPositionsVisited.add(actualAnnotPos)) {
+            if (isSilentAnnot(annot) && suppressionPositionsVisited.add(actualAnnotPos.point)) {
               suppressionsBuf += mkSuppression(tree, annot, actualAnnotPos, inMacroExpansion)
             }
           }
