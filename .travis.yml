@@ -4,15 +4,16 @@ scala:
   - 2.11.12
   - 2.12.8
   - 2.13.0-RC3
-  
+
 jdk:
-  - oraclejdk8  
+  - oraclejdk8
 
 cache:
   directories:
     - $HOME/.ivy2/cache
     - $HOME/.coursier/cache
     - $HOME/.sbt/boot/
+    - $HOME/.sbt/launchers/
 
 before_cache:
   - find $HOME/.ivy2 -name "ivydata-*.properties" -delete
@@ -20,3 +21,9 @@ before_cache:
 
 script:
   - sbt ++$TRAVIS_SCALA_VERSION clean test
+
+jobs:
+  include:
+    - stage: release
+      script: if [ "$TRAVIS_PULL_REQUEST" = 'false' ]; then ./travis/release.sh; fi
+      if: tag =~ ^v

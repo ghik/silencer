@@ -17,4 +17,4 @@ project/plugins/project/
 *.ipr
 *.iws
 .idea/
-
+local.*

@@ -4,9 +4,22 @@ name := "silencer"
 val saveTestClasspath = taskKey[File](
   "Saves test classpath to a file so that it can be used by embedded scalac in tests")
 
+pgpPublicRing := file("./travis/local.pubring.asc")
+pgpSecretRing := file("./travis/local.secring.asc")
+pgpPassphrase := sys.env.get("PGP_PASSPHRASE").map(_.toCharArray)
+
+credentials in Global += Credentials(
+  "Sonatype Nexus Repository Manager",
+  "oss.sonatype.org",
+  sys.env.getOrElse("SONATYPE_USERNAME", ""),
+  sys.env.getOrElse("SONATYPE_PASSWORD", "")
+)
+
+version in ThisBuild :=
+  sys.env.get("TRAVIS_TAG").filter(_.startsWith("v")).map(_.drop(1)).getOrElse("1.4-SNAPSHOT")
+
 val commonSettings = Seq(
   organization := "com.github.ghik",
-  version := "1.4.1",
   scalaVersion := "2.12.8",
   crossScalaVersions := Seq("2.11.12", scalaVersion.value, "2.13.0-RC3"),
   projectInfo := ModuleInfo(
