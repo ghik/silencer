@@ -25,5 +25,5 @@ script:
 jobs:
   include:
     - stage: release
-      script: if [ "$TRAVIS_PULL_REQUEST" = 'false' ]; then ./travis/release.sh; fi
+      script: if [ "$TRAVIS_PULL_REQUEST" = 'false' ]; then ./release.sh; fi
       if: tag =~ ^v
