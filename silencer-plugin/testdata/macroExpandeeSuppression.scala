@@ -1,3 +1,5 @@
+package testdata
+
 import com.github.ghik.silencer.silent
 
 import scala.language.experimental.macros

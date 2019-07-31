@@ -149,7 +149,12 @@ class SilencerPlugin(val global: Global) extends Plugin { plugin =>
               case typed@Typed(_, tpt) if tpt.tpe != null =>
                 tpt.tpe.annotations.foreach(ai => addSuppression(typed, ai.tree, ai.pos))
               case md: MemberDef =>
-                md.symbol.annotations.foreach(ai => addSuppression(md, ai.tree, ai.pos))
+                val annots = md.symbol.annotations
+                // search for @silent annotations in trees of other annotations
+                // you would expect that super.traverse should do that but it doesn't because apparently
+                // at typer phase annotations are no longer available in the tree itself and must be fetched from symbol
+                annots.foreach(ai => traverse(ai.tree))
+                annots.foreach(ai => addSuppression(md, ai.tree, ai.pos))
               case _ =>
             }
 

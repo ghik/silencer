@@ -75,6 +75,9 @@ class AnnotationSuppressionTest extends SilencerPluginTest {
   test("class suppression") {
     testFile("classSuppression.scala", 1)
   }
+  test("annotation argument suppression") {
+    testFile("annotArgSuppression.scala", 1)
+  }
   test("late warning") {
     testFile("lateWarning.scala", 1)
   }
