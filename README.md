@@ -15,7 +15,7 @@ If you're using SBT, add this to your project definition:
 ```scala
 libraryDependencies ++= Seq(
   compilerPlugin("com.github.ghik" % "silencer-plugin" % silencerVersion cross CrossVersion.full),
-  "com.github.ghik" % "silencer-lib" % silencerVersion cross CrossVersion.full % Provided 
+  "com.github.ghik" % "silencer-lib" % silencerVersion % Provided cross CrossVersion.full
 )
 ```
 
