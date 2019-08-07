@@ -80,7 +80,7 @@ scalacOptions += "-P:silencer:checkUnused"
 You can also suppress warnings globally based on a warning message regex. In order to do that, pass this option to `scalac`:
 
 ```scala
-scalacOptions += "-P:silencer:globalFilters=[semi-colon separated message patterns]"
+scalacOptions += "-P:silencer:globalFilters=<semicolon separated message regexes>"
 ```
 
 ## Filename based suppression
@@ -88,7 +88,7 @@ scalacOptions += "-P:silencer:globalFilters=[semi-colon separated message patter
 Another option is to suppress all warnings in selected source files. This can be done by specifying a list of file path regexes:
 
 ```scala
-scalacOptions += "-P:silencer:pathFilters=[semi-colon separated file path patterns]"
+scalacOptions += "-P:silencer:pathFilters=<semicolon separated file path regexes>"
 ```
 
 **NOTE**: In order to make builds independent of environment, filename separators are normalized to UNIX style (`/`) before the path is matched against path patterns.
