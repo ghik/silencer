@@ -1,8 +1,5 @@
 package com.github.ghik.silencer
 
-import java.io.File
-
-import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import scala.reflect.internal.util.{Position, SourceFile}
 import scala.reflect.io.AbstractFile
@@ -14,12 +11,7 @@ class SuppressingReporter(
   globalFilters: List[Regex],
   pathFilters: List[Regex],
   sourceRoots: List[AbstractFile]
-) extends Reporter {
-
-  private val deferredWarnings = new mutable.HashMap[SourceFile, ArrayBuffer[(Position, String)]]
-  private val fileSuppressions = new mutable.HashMap[SourceFile, List[Suppression]]
-  private val normalizedPathCache = new mutable.HashMap[SourceFile, String]
-
+) extends Reporter with SuppressingReporterBase {
   //Suppressions are sorted by end offset of their suppression ranges so that nested suppressions come before
   //their containing suppressions. This is ensured by FindSuppressions traverser in SilencerPlugin.
   //This order is important for proper unused @silent annotation detection.
@@ -36,9 +28,6 @@ class SuppressingReporter(
     }
     updateCounts()
   }
-
-  def checkUnused(source: SourceFile): Unit =
-    fileSuppressions(source).foreach(_.reportUnused(this))
 
   override def reset(): Unit = {
     super.reset()
@@ -74,15 +63,6 @@ class SuppressingReporter(
     }
     updateCounts()
   }
-
-  private def relativize(dir: AbstractFile, child: AbstractFile): Option[String] = {
-    val childPath = child.canonicalPath
-    val dirPath = dir.canonicalPath + File.separator
-    if (childPath.startsWith(dirPath)) Some(childPath.substring(dirPath.length)) else None
-  }
-
-  private def anyMatches(patterns: List[Regex], value: String): Boolean =
-    patterns.exists(_.findFirstIn(value).isDefined)
 
   private def updateCounts(): Unit = {
     INFO.count = original.INFO.count
