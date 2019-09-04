@@ -42,21 +42,25 @@ class SuppressingReporter(
     *   - 2: don't count, don't display
     */
   override def filter(pos: Position, msg: String, severity: Severity): Int = {
-    super.filter(pos, msg, severity) match {
-      case 0 if severity == WARNING =>
-        if (matchesPathFilter(pos) || anyMatches(globalFilters, msg))
-          2
-        else if (!pos.isDefined)
-          0
-        else if (!fileSuppressions.contains(pos.source)) {
-          deferredWarnings.getOrElseUpdate(pos.source, new ArrayBuffer) += ((pos, msg))
-          2
-        } else if (isSuppressed(fileSuppressions(pos.source), pos, msg))
+    def checkGlobalFilters(suspend: Boolean): Int = {
+      if (matchesPathFilter(pos) || anyMatches(globalFilters, msg))
+        2
+      else if (suspend) {
+        deferredWarnings.getOrElseUpdate(pos.source, new ArrayBuffer) += ((pos, msg))
+        2
+      } else
+        super.filter(pos, msg, severity)
+    }
+
+    if (severity == WARNING) {
+      if (fileSuppressions.contains(pos.source)) { // @silent annotations in file are known
+        if (isSuppressed(fileSuppressions(pos.source), pos, msg))
           2
         else
-          0
-
-      case n => n
-    }
+          checkGlobalFilters(suspend = false)
+      } else
+        checkGlobalFilters(suspend = true)
+    } else
+      super.filter(pos, msg, severity)
   }
 }
