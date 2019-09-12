@@ -20,9 +20,9 @@ version in ThisBuild :=
 
 val commonSettings = Seq(
   organization := "com.github.ghik",
-  scalaVersion := "2.12.9",
+  scalaVersion := "2.12.10",
   crossVersion := CrossVersion.full,
-  crossScalaVersions := Seq("2.11.12", "2.12.8", scalaVersion.value, "2.13.0"),
+  crossScalaVersions := Seq("2.11.12", "2.12.8", "2.12.9", scalaVersion.value, "2.13.0"),
   projectInfo := ModuleInfo(
     nameFormal = "Silencer",
     description = "Scala compiler plugin for annotation-based warning suppression",
