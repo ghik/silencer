@@ -29,7 +29,7 @@ val commonSettings = Seq(
       val is130 = sv == "2.13.0" // use 2.12 version for 2.13.0, reporters changed in 2.13.1
       CrossVersion.partialVersion(sv) match {
         case Some((2, n)) if n < 13 || is130 => file(dir.getPath ++ "-2.12-")
-        case _                               => file(dir.getPath ++ "-2.13+")
+        case _ => file(dir.getPath ++ "-2.13+")
       }
     }
   },
@@ -63,6 +63,8 @@ val subprojectSettings = commonSettings ++ Seq(
       Opts.resolver.sonatypeStaging
   ),
   pomIncludeRepository := { _ => false },
+  sonatypeBundleDirectory := (ThisBuild / baseDirectory).value / target.value.getName / "sonatype-staging" / s"silencer-${version.value}",
+  publishTo := sonatypePublishToBundle.value,
 )
 
 lazy val silencer = (project in file(".")).aggregate(`silencer-lib`, `silencer-plugin`)
@@ -85,10 +87,7 @@ lazy val `silencer-plugin` = project.dependsOn(`silencer-lib`)
   .settings(
     libraryDependencies ++= Seq(
       "org.scala-lang" % "scala-compiler" % scalaVersion.value,
-      if (scalaBinaryVersion.value == "2.13")
-        "org.scalatest" %% "scalatest" % "3.1.0-SNAP13" % Test
-      else
-        "org.scalatest" %% "scalatest" % "3.0.8-RC5" % Test
+      "org.scalatest" %% "scalatest" % "3.0.8" % Test
     ),
     saveTestClasspath := {
       val result = (classDirectory in Test).value / "embeddedcp"

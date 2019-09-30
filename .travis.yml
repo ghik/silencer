@@ -14,9 +14,9 @@ jdk:
 cache:
   directories:
     - $HOME/.ivy2/cache
-    - $HOME/.coursier/cache
-    - $HOME/.sbt/boot/
-    - $HOME/.sbt/launchers/
+    - $HOME/.m2
+    - $HOME/.cache
+    - $HOME/.sbt
 
 before_cache:
   - find $HOME/.ivy2 -name "ivydata-*.properties" -delete
