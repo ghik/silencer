@@ -4,7 +4,9 @@ name := "silencer"
 val saveTestClasspath = taskKey[File](
   "Saves test classpath to a file so that it can be used by embedded scalac in tests")
 
-pgpKeyRing := Some(file("./travis/local.secring.asc"))
+useGpg := false // TODO: use sbt-ci-release
+pgpPublicRing := file("./travis/local.pubring.asc")
+pgpSecretRing := file("./travis/local.secring.asc")
 pgpPassphrase := sys.env.get("PGP_PASSPHRASE").map(_.toCharArray)
 
 credentials in Global += Credentials(
