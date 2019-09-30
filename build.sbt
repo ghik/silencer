@@ -56,12 +56,6 @@ val commonSettings = Seq(
 
 val subprojectSettings = commonSettings ++ Seq(
   publishMavenStyle := true,
-  publishTo := Some(
-    if (isSnapshot.value)
-      Opts.resolver.sonatypeSnapshots
-    else
-      Opts.resolver.sonatypeStaging
-  ),
   pomIncludeRepository := { _ => false },
   sonatypeBundleDirectory := (ThisBuild / baseDirectory).value / target.value.getName / "sonatype-staging" / s"silencer-${version.value}",
   publishTo := sonatypePublishToBundle.value,
