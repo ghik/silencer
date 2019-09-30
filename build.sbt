@@ -20,9 +20,19 @@ version in ThisBuild :=
 
 val commonSettings = Seq(
   organization := "com.github.ghik",
-  scalaVersion := "2.12.10",
+  scalaVersion := "2.13.1",
   crossVersion := CrossVersion.full,
-  crossScalaVersions := Seq("2.11.12", "2.12.8", "2.12.9", scalaVersion.value, "2.13.0"),
+  crossScalaVersions := Seq("2.11.12", "2.12.8", "2.12.9", "2.12.10", "2.13.0", scalaVersion.value),
+  unmanagedSourceDirectories in Compile ++= {
+    (unmanagedSourceDirectories in Compile).value.map { dir =>
+      val sv = scalaVersion.value
+      val is130 = sv == "2.13.0" // use 2.12 version for 2.13.0, reporters changed in 2.13.1
+      CrossVersion.partialVersion(sv) match {
+        case Some((2, n)) if n < 13 || is130 => file(dir.getPath ++ "-2.12-")
+        case _                               => file(dir.getPath ++ "-2.13+")
+      }
+    }
+  },
   projectInfo := ModuleInfo(
     nameFormal = "Silencer",
     description = "Scala compiler plugin for annotation-based warning suppression",
@@ -76,7 +86,7 @@ lazy val `silencer-plugin` = project.dependsOn(`silencer-lib`)
     libraryDependencies ++= Seq(
       "org.scala-lang" % "scala-compiler" % scalaVersion.value,
       if (scalaBinaryVersion.value == "2.13")
-        "org.scalatest" % "scalatest_2.13.0-RC3" % "3.0.8-RC5" % Test
+        "org.scalatest" %% "scalatest" % "3.1.0-SNAP13" % Test
       else
         "org.scalatest" %% "scalatest" % "3.0.8-RC5" % Test
     ),
