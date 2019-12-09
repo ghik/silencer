@@ -17,7 +17,7 @@ credentials in Global += Credentials(
 )
 
 version in ThisBuild :=
-  sys.env.get("TRAVIS_TAG").filter(_.startsWith("v")).map(_.drop(1)).getOrElse("1.4-SNAPSHOT")
+  sys.env.get("TRAVIS_TAG").filter(_.startsWith("v")).map(_.drop(1)).getOrElse("1.5-SNAPSHOT")
 
 val commonSettings = Seq(
   organization := "com.github.ghik",
@@ -25,12 +25,13 @@ val commonSettings = Seq(
   crossVersion := CrossVersion.full,
   crossScalaVersions := Seq("2.11.12", "2.12.8", "2.12.9", "2.12.10", "2.13.0", scalaVersion.value),
   unmanagedSourceDirectories in Compile ++= {
-    (unmanagedSourceDirectories in Compile).value.map { dir =>
+    (unmanagedSourceDirectories in Compile).value.flatMap { dir =>
       val sv = scalaVersion.value
-      val is130 = sv == "2.13.0" // use 2.12 version for 2.13.0, reporters changed in 2.13.1
+      val path = dir.getPath
       CrossVersion.partialVersion(sv) match {
-        case Some((2, n)) if n < 13 || is130 => file(dir.getPath ++ "-2.12-")
-        case _ => file(dir.getPath ++ "-2.13+")
+        case Some((2, n)) if n < 13          => Seq(file(path ++ "-2.12-"), file(path ++ "-2.13-"))
+        case Some((2, _)) if sv == "2.13.0"  => Seq(file(path ++ "-2.13-"), file(path ++ "-2.13+"))
+        case _                               => Seq(file(path ++ "-2.13+"), file(path ++ "-2.13.1+"))
       }
     }
   },

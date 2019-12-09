@@ -22,9 +22,12 @@ class SilencerPlugin(val global: Global) extends Plugin { plugin =>
   private val pathFilters = ListBuffer.empty[Regex]
   private val sourceRoots = ListBuffer.empty[AbstractFile]
   private var checkUnused = false
+  private var experimental = false
 
   private lazy val reporter =
     new SuppressingReporter(global.reporter, globalFilters.result(), pathFilters.result(), sourceRoots.result())
+
+  object NamedArgExtract extends SilencerNamedArgExtractor(global)
 
   private def split(s: String): Iterator[String] = s.split(';').iterator
 
@@ -44,6 +47,8 @@ class SilencerPlugin(val global: Global) extends Plugin { plugin =>
         }
       case Array("checkUnused") =>
         checkUnused = true
+      case Array("experimental") =>
+        experimental = true
       case _ =>
     })
 
@@ -55,6 +60,7 @@ class SilencerPlugin(val global: Global) extends Plugin { plugin =>
       |  -P:silencer:pathFilters=...    Semicolon separated regexes for filtering source paths
       |  -P:silencer:sourceRoots=...    Semicolon separated paths of source root directories to relativize path filters
       |  -P:silencer:checkUnused        Enables reporting of unused @silent annotations
+      |  -P:silencer:experimental       Enables usage of @SuppressWarnings annotation instead of @silent
     """.stripMargin)
 
   private object extractSuppressions extends PluginComponent {
@@ -64,16 +70,20 @@ class SilencerPlugin(val global: Global) extends Plugin { plugin =>
     val phaseName = "silencer"
     override def description: String = "inspect @silent annotations for warning suppression"
 
-    private lazy val silentSym = try rootMirror.staticClass("com.github.ghik.silencer.silent") catch {
-      case _: ScalaReflectionException =>
-        if (globalFilters.isEmpty && pathFilters.isEmpty) {
-          plugin.reporter.warning(NoPosition,
-            "`silencer-plugin` was enabled but the @silent annotation was not found on classpath" +
-              " - have you added `silencer-lib` as a library dependency?"
-          )
+    private lazy val silentSym =
+      if (experimental) rootMirror.staticClass("java.lang.SuppressWarnings")
+      else {
+        try rootMirror.staticClass("com.github.ghik.silencer.silent") catch {
+          case _: ScalaReflectionException =>
+            if (globalFilters.isEmpty && pathFilters.isEmpty) {
+              plugin.reporter.error(NoPosition,
+                "`silencer-plugin` was enabled but the @silent annotation was not found on classpath" +
+                  " - have you added `silencer-lib` as a library dependency?"
+              )
+            }
+            NoSymbol
         }
-        NoSymbol
-    }
+      }
 
     def newPhase(prev: Phase): StdPhase = new StdPhase(prev) {
       def apply(unit: CompilationUnit): Unit = applySuppressions(unit)
@@ -84,22 +94,53 @@ class SilencerPlugin(val global: Global) extends Plugin { plugin =>
         val silentAnnotType = TypeRef(NoType, silentSym, Nil)
         def isSilentAnnot(tree: Tree) =
           tree.tpe != null && tree.tpe <:< silentAnnotType
+        def mkPattern(regex: String, annotPos: Position) =
+          try Some(regex.r) catch { case pse: PatternSyntaxException =>
+            reporter.error(annotPos, s"invalid message pattern $regex in silencer annotation: ${pse.getMessage}")
+            None
+          }
 
         def mkSuppression(tree: Tree, annot: Tree, annotPos: Position, inMacroExpansion: Boolean): Suppression = {
           val range = treeRangePos(tree)
-          val msgPattern = annot match {
-            case Apply(_, Nil) => None
-            case Apply(_, List(Literal(Constant(regex: String)))) =>
-              try Some(regex.r) catch {
-                case pse: PatternSyntaxException =>
-                  reporter.error(annotPos, s"invalid message pattern $regex in @silent annotation: ${pse.getMessage}")
-                  None
-              }
-            case _ =>
-              reporter.error(annotPos, "expected literal string as @silent annotation argument")
-              None
+
+          if (experimental) {
+            object SilencerAnnotationValue {
+              private val Name = "silencer"
+              private val Prefix = s"$Name:"
+              private val Empty = ""
+
+              def unapply(tree: Tree): Option[String] =
+                tree.collect {
+                  case Literal(Constant(Name)) => Some(Empty)
+                  case Literal(Constant(str: String)) =>
+                    str.stripPrefix(Prefix) match {
+                      case `str`    => None
+                      case stripped => Some(stripped)
+                    }
+                  case _ => None
+                }
+                .headOption
+                .flatten
+            }
+
+            annot match {
+              case Apply(_, List(NamedArgExtract(Ident(TermName("value")), Apply(Ident(_), List(SilencerAnnotationValue(regex)))))) =>
+                val msgPattern = if (regex.isEmpty) None else mkPattern(regex, annotPos)
+
+                new Suppression(annotPos, range, msgPattern, inMacroExpansion)
+              case _ => null
+            }
+          } else {
+            val msgPattern = annot match {
+              case Apply(_, Nil) => None
+              case Apply(_, List(Literal(Constant(regex: String)))) => mkPattern(regex, annotPos)
+              case _ =>
+                reporter.error(annotPos, "expected literal string as @silent annotation argument")
+                None
+            }
+
+            new Suppression(annotPos, range, msgPattern, inMacroExpansion)
           }
-          new Suppression(annotPos, range, msgPattern, inMacroExpansion)
         }
 
         def treeRangePos(tree: Tree): Position = {
@@ -126,7 +167,8 @@ class SilencerPlugin(val global: Global) extends Plugin { plugin =>
           private def addSuppression(tree: Tree, annot: Tree, annotPos: Position): Unit = {
             val actualAnnotPos = if (annotPos != NoPosition) annotPos else tree.pos
             if (isSilentAnnot(annot) && suppressionPositionsVisited.add(actualAnnotPos.point)) {
-              suppressionsBuf += mkSuppression(tree, annot, actualAnnotPos, inMacroExpansion)
+              val suppression = mkSuppression(tree, annot, actualAnnotPos, inMacroExpansion)
+              if (suppression != null) suppressionsBuf += suppression
             }
           }
 
