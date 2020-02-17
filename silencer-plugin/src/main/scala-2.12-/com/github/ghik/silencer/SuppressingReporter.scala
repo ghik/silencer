@@ -9,6 +9,7 @@ import scala.util.matching.Regex
 class SuppressingReporter(
   original: Reporter,
   globalFilters: List[Regex],
+  protected val lineContentFilters: List[Regex],
   protected val pathFilters: List[Regex],
   protected val sourceRoots: List[AbstractFile]
 ) extends Reporter with SuppressingReporterBase {
@@ -40,7 +41,7 @@ class SuppressingReporter(
     severity match {
       case INFO =>
         original.info(pos, msg, force)
-      case WARNING if matchesPathFilter(pos) || anyMatches(globalFilters, msg) =>
+      case WARNING if matchesPathFilter(pos) || anyMatches(globalFilters, msg) || matchesLineContentFilter(pos) =>
         ()
       case WARNING if !pos.isDefined =>
         original.warning(pos, msg)

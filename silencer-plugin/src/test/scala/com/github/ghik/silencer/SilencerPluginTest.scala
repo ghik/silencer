@@ -17,6 +17,7 @@ abstract class SilencerPluginTest(options: String*) extends FunSuite { suite =>
   val settings = new Settings
 
   settings.deprecation.value = true
+  settings.warnUnused.enable(settings.UnusedWarnings.Imports)
   settings.pluginOptions.value = settings.pluginOptions.value ++ options.map(o => s"silencer:$o")
 
   Option(getClass.getResourceAsStream("/embeddedcp")) match {
@@ -105,6 +106,14 @@ class GlobalSuppressionTest extends SilencerPluginTest(
   test("global path filters") {
     testFile(s"inner${File.separator}globallyFilteredByPath.scala")
     testFile(s"inner${File.separator}unfiltered.scala", 2)
+  }
+}
+
+class LineContentFiltersTest extends SilencerPluginTest(
+  "lineContentFilters=^import java\\.util\\."
+) {
+  test("line content filters") {
+    testFile("lineContentFiltered.scala", 1)
   }
 }
 

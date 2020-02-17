@@ -88,6 +88,15 @@ You can also suppress warnings globally based on a warning message regex. In ord
 scalacOptions += "-P:silencer:globalFilters=<semicolon separated message regexes>"
 ```
 
+## Line content based suppression
+
+Filtering may also be based on the content of source line that generated the warning.
+This is particularly useful for suppressing 'unused import' warnings based on what's being imported.
+
+```scala
+scalacOptions += "-P:silencer:lineContentFilters=<semicolon separated line content regexes>"
+```
+
 ## Filename based suppression
 
 Another option is to suppress all warnings in selected source files. This can be done by specifying a list of file path regexes:

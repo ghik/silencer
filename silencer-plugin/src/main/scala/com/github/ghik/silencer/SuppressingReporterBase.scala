@@ -12,6 +12,7 @@ import scala.util.matching.Regex
 // Code that's shared between the version-dependent sources for 2.12 and 2.13
 trait SuppressingReporterBase { self: Reporter =>
   protected def pathFilters: List[Regex]
+  protected def lineContentFilters: List[Regex]
   protected def sourceRoots: List[AbstractFile]
 
   protected val deferredWarnings = new mutable.HashMap[SourceFile, ArrayBuffer[(Position, String)]]
@@ -27,7 +28,7 @@ trait SuppressingReporterBase { self: Reporter =>
     if (childPath.startsWith(dirPath)) Some(childPath.substring(dirPath.length)) else None
   }
 
-  protected def matchesPathFilter(pos: Position): Boolean = pathFilters.nonEmpty && {
+  protected def matchesPathFilter(pos: Position): Boolean = pathFilters.nonEmpty && pos.isDefined && {
     val filePath = normalizedPathCache.getOrElseUpdate(pos.source, {
       val file = pos.source.file
       val relIt = sourceRoots.iterator.flatMap(relativize(_, file))
@@ -36,6 +37,10 @@ trait SuppressingReporterBase { self: Reporter =>
     })
     anyMatches(pathFilters, filePath)
   }
+
+  protected def matchesLineContentFilter(pos: Position): Boolean =
+    lineContentFilters.nonEmpty && pos.isDefined &&
+      anyMatches(lineContentFilters, pos.source.lines(pos.line - 1).next())
 
   protected def anyMatches(patterns: List[Regex], value: String): Boolean =
     patterns.exists(_.findFirstIn(value).isDefined)

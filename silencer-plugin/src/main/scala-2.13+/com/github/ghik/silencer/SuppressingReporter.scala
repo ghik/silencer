@@ -9,6 +9,7 @@ import scala.util.matching.Regex
 class SuppressingReporter(
   original: FilteringReporter,
   globalFilters: List[Regex],
+  protected val lineContentFilters: List[Regex],
   protected val pathFilters: List[Regex],
   protected val sourceRoots: List[AbstractFile]
 ) extends ForwardingReporter(original) with SuppressingReporterBase {
@@ -43,7 +44,7 @@ class SuppressingReporter(
    */
   override def filter(pos: Position, msg: String, severity: Severity): Int = {
     def globallySuppressed: Boolean =
-      matchesPathFilter(pos) || anyMatches(globalFilters, msg)
+      matchesPathFilter(pos) || anyMatches(globalFilters, msg) || matchesLineContentFilter(pos)
 
     def locallySuppressed: Boolean = fileSuppressions.get(pos.source) match {
       case Some(suppressions) => isSuppressed(suppressions, pos, msg)

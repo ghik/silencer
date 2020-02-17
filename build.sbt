@@ -17,13 +17,13 @@ credentials in Global += Credentials(
 )
 
 version in ThisBuild :=
-  sys.env.get("TRAVIS_TAG").filter(_.startsWith("v")).map(_.drop(1)).getOrElse("1.4-SNAPSHOT")
+  sys.env.get("TRAVIS_TAG").filter(_.startsWith("v")).map(_.drop(1)).getOrElse("1.5-SNAPSHOT")
 
 val commonSettings = Seq(
   organization := "com.github.ghik",
   scalaVersion := "2.13.1",
   crossVersion := CrossVersion.full,
-  crossScalaVersions := Seq("2.11.12", "2.12.8", "2.12.9", "2.12.10", "2.13.0", scalaVersion.value),
+  crossScalaVersions := Seq("2.12.8", "2.12.9", "2.12.10", "2.13.0", scalaVersion.value),
   unmanagedSourceDirectories in Compile ++= {
     (unmanagedSourceDirectories in Compile).value.map { dir =>
       val sv = scalaVersion.value

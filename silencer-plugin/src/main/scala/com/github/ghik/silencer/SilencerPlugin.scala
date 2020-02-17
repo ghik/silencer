@@ -19,12 +19,13 @@ class SilencerPlugin(val global: Global) extends Plugin { plugin =>
   val components: List[PluginComponent] = List(extractSuppressions, checkUnusedSuppressions)
 
   private val globalFilters = ListBuffer.empty[Regex]
+  private val lineContentFilters = ListBuffer.empty[Regex]
   private val pathFilters = ListBuffer.empty[Regex]
   private val sourceRoots = ListBuffer.empty[AbstractFile]
   private var checkUnused = false
 
-  private lazy val reporter =
-    new SuppressingReporter(global.reporter, globalFilters.result(), pathFilters.result(), sourceRoots.result())
+  private lazy val reporter = new SuppressingReporter(global.reporter,
+    globalFilters.result(), lineContentFilters.result(), pathFilters.result(), sourceRoots.result())
 
   private def split(s: String): Iterator[String] = s.split(';').iterator
 
@@ -32,6 +33,8 @@ class SilencerPlugin(val global: Global) extends Plugin { plugin =>
     options.foreach(_.split("=", 2) match {
       case Array("globalFilters", pattern) =>
         globalFilters ++= split(pattern).map(_.r)
+      case Array("lineContentFilters", pattern) =>
+        lineContentFilters ++= split(pattern).map(_.r)
       case Array("pathFilters", pattern) =>
         pathFilters ++= split(pattern).map(_.r)
       case Array("sourceRoots", rootPaths) =>
