@@ -41,7 +41,7 @@ tasks.withType(ScalaCompile) {
 }
 ```
     
-Silencer currently works with Scala 2.11.4+, 2.12.0+ and 2.13.0-M4+. Also note that since both `silencer-plugin` and 
+Silencer currently works with Scala 2.12.0+ and 2.13.0-M4+. Also note that since both `silencer-plugin` and 
 `silencer-lib` are compile time only dependencies, Silencer can also be used in ScalaJS and Scala Native without having 
 to be cross compiled for them.
 
