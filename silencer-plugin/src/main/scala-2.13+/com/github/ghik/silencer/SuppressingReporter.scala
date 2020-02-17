@@ -37,30 +37,22 @@ class SuppressingReporter(
   }
 
   /** Return
-    *   - 0: count and display
-    *   - 1: count only, don't display
-    *   - 2: don't count, don't display
-    */
+   *   - 0: count and display
+   *   - 1: count only, don't display
+   *   - 2: don't count, don't display
+   */
   override def filter(pos: Position, msg: String, severity: Severity): Int = {
-    def checkGlobalFilters(suspend: Boolean): Int = {
-      if (matchesPathFilter(pos) || anyMatches(globalFilters, msg))
-        2
-      else if (suspend) {
+    def globallySuppressed: Boolean =
+      matchesPathFilter(pos) || anyMatches(globalFilters, msg)
+
+    def locallySuppressed: Boolean = fileSuppressions.get(pos.source) match {
+      case Some(suppressions) => isSuppressed(suppressions, pos, msg)
+      case None =>
         deferredWarnings.getOrElseUpdate(pos.source, new ArrayBuffer) += ((pos, msg))
-        2
-      } else
-        super.filter(pos, msg, severity)
+        true
     }
 
-    if (severity == WARNING) {
-      if (fileSuppressions.contains(pos.source)) { // @silent annotations in file are known
-        if (isSuppressed(fileSuppressions(pos.source), pos, msg))
-          2
-        else
-          checkGlobalFilters(suspend = false)
-      } else
-        checkGlobalFilters(suspend = true)
-    } else
-      super.filter(pos, msg, severity)
+    if (severity == WARNING && (globallySuppressed || locallySuppressed)) 2
+    else super.filter(pos, msg, severity)
   }
 }
