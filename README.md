@@ -123,3 +123,8 @@ Another good choice for source roots may be actual SBT source directories:
 scalacOptions += s"-P:silencer:sourceRoots=${sourceDirectories.value.map(_.getCanonicalPath).mkString(";")}"
 ```
 
+## Searching macro expansions
+
+By default (starting from version 1.6.0) silencer does not look for `@silent` annotations in macro expansions.
+If you want to bring back the old behaviour where both macro expansions and expandees are searched, use the
+`-P:silencer:searchMacroExpansions` option.
