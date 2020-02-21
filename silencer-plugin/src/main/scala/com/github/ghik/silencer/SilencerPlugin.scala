@@ -23,6 +23,7 @@ class SilencerPlugin(val global: Global) extends Plugin { plugin =>
   private val pathFilters = ListBuffer.empty[Regex]
   private val sourceRoots = ListBuffer.empty[AbstractFile]
   private var checkUnused = false
+  private var searchMacroExpansions = false
 
   private lazy val reporter = new SuppressingReporter(global.reporter,
     globalFilters.result(), lineContentFilters.result(), pathFilters.result(), sourceRoots.result())
@@ -47,6 +48,8 @@ class SilencerPlugin(val global: Global) extends Plugin { plugin =>
         }
       case Array("checkUnused") =>
         checkUnused = true
+      case Array("searchMacroExpansions") =>
+        searchMacroExpansions = true
       case _ =>
     })
 
@@ -139,29 +142,30 @@ class SilencerPlugin(val global: Global) extends Plugin { plugin =>
             if (macroExpansion) {
               traverse(expandee)
             }
+            if (!macroExpansion || searchMacroExpansions) {
+              val wasInMacroExpansion = inMacroExpansion
+              inMacroExpansion = inMacroExpansion || macroExpansion
 
-            val wasInMacroExpansion = inMacroExpansion
-            inMacroExpansion = inMacroExpansion || macroExpansion
+              //NOTE: it's important to first traverse the children so that nested suppression ranges come before
+              //containing suppression ranges
+              super.traverse(t)
+              t match {
+                case Annotated(annot, arg) =>
+                  addSuppression(arg, annot, annot.pos)
+                case typed@Typed(_, tpt) if tpt.tpe != null =>
+                  tpt.tpe.annotations.foreach(ai => addSuppression(typed, ai.tree, ai.pos))
+                case md: MemberDef =>
+                  val annots = md.symbol.annotations
+                  // search for @silent annotations in trees of other annotations
+                  // you would expect that super.traverse should do that but it doesn't because apparently
+                  // at typer phase annotations are no longer available in the tree itself and must be fetched from symbol
+                  annots.foreach(ai => traverse(ai.tree))
+                  annots.foreach(ai => addSuppression(md, ai.tree, ai.pos))
+                case _ =>
+              }
 
-            //NOTE: it's important to first traverse the children so that nested suppression ranges come before
-            //containing suppression ranges
-            super.traverse(t)
-            t match {
-              case Annotated(annot, arg) =>
-                addSuppression(arg, annot, annot.pos)
-              case typed@Typed(_, tpt) if tpt.tpe != null =>
-                tpt.tpe.annotations.foreach(ai => addSuppression(typed, ai.tree, ai.pos))
-              case md: MemberDef =>
-                val annots = md.symbol.annotations
-                // search for @silent annotations in trees of other annotations
-                // you would expect that super.traverse should do that but it doesn't because apparently
-                // at typer phase annotations are no longer available in the tree itself and must be fetched from symbol
-                annots.foreach(ai => traverse(ai.tree))
-                annots.foreach(ai => addSuppression(md, ai.tree, ai.pos))
-              case _ =>
+              inMacroExpansion = wasInMacroExpansion
             }
-
-            inMacroExpansion = wasInMacroExpansion
           }
         }
 
