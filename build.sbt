@@ -21,9 +21,9 @@ version in ThisBuild :=
 
 val commonSettings = Seq(
   organization := "com.github.ghik",
-  scalaVersion := "2.13.1",
+  scalaVersion := "2.13.2",
   crossVersion := CrossVersion.full,
-  crossScalaVersions := Seq("2.12.8", "2.12.9", "2.12.10", "2.12.11", "2.13.0", scalaVersion.value),
+  crossScalaVersions := Seq("2.12.8", "2.12.9", "2.12.10", "2.12.11", "2.13.0", "2.13.1", scalaVersion.value),
   unmanagedSourceDirectories in Compile ++= {
     (unmanagedSourceDirectories in Compile).value.map { dir =>
       val sv = scalaVersion.value
