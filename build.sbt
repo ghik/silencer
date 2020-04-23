@@ -23,7 +23,7 @@ val commonSettings = Seq(
   organization := "com.github.ghik",
   scalaVersion := "2.13.2",
   crossVersion := CrossVersion.full,
-  crossScalaVersions := Seq("2.12.8", "2.12.9", "2.12.10", "2.12.11", "2.13.0", "2.13.1", scalaVersion.value),
+  crossScalaVersions := Seq("2.12.8", "2.12.9", "2.12.10", "2.12.11", scalaVersion.value),
   unmanagedSourceDirectories in Compile ++= {
     (unmanagedSourceDirectories in Compile).value.map { dir =>
       val sv = scalaVersion.value
@@ -72,7 +72,8 @@ lazy val `silencer-lib` = project
   .settings(subprojectSettings: _*)
   .settings(
     libraryDependencies ++= Seq(
-      "org.scala-lang" % "scala-reflect" % scalaVersion.value % Test
+      "org.scala-lang" % "scala-reflect" % scalaVersion.value % Test,
+      "org.scala-lang.modules" %% "scala-collection-compat" % "2.1.6" % Test
     )
   )
 
@@ -83,12 +84,11 @@ lazy val `silencer-plugin` = project.dependsOn(`silencer-lib`)
       "org.scala-lang" % "scala-compiler" % scalaVersion.value,
       "org.scalatest" %% "scalatest" % "3.0.8" % Test
     ),
-    saveTestClasspath := {
-      val result = (classDirectory in Test).value / "embeddedcp"
+    resourceGenerators in Test += Def.task {
+      val result = (resourceManaged in Test).value / "embeddedcp"
       IO.write(result, (fullClasspath in `silencer-lib` in Test).value.map(_.data.getAbsolutePath).mkString("\n"))
-      result
-    },
-    (test in Test) := (test in Test).dependsOn(saveTestClasspath).value,
+      Seq(result)
+    }.taskValue,
     fork in Test := true,
     baseDirectory in Test := (baseDirectory in ThisBuild).value,
   )

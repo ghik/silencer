@@ -12,6 +12,6 @@ class Suppression(annotPos: Position, range: Position, msgPattern: Option[Regex]
 
   def reportUnused(reporter: Reporter): Unit =
     if (!inMacroExpansion && !used) {
-      reporter.error(annotPos, s"this @silent annotation does not suppress any warnings")
+      reporter.error(annotPos, s"this annotation does not suppress any warnings")
     }
 }

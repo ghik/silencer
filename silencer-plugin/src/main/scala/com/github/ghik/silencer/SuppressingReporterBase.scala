@@ -33,7 +33,7 @@ trait SuppressingReporterBase { self: Reporter =>
       val file = pos.source.file
       val relIt = sourceRoots.iterator.flatMap(relativize(_, file))
       val relPath = if (relIt.hasNext) relIt.next() else file.canonicalPath
-      relPath.replaceAllLiterally("\\", "/")
+      relPath.replace("\\", "/")
     })
     anyMatches(pathFilters, filePath)
   }

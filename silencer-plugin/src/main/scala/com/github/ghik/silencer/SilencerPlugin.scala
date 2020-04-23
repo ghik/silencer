@@ -7,7 +7,7 @@ import scala.collection.mutable.ListBuffer
 import scala.reflect.internal.util.Position
 import scala.reflect.io.AbstractFile
 import scala.tools.nsc.plugins.{Plugin, PluginComponent}
-import scala.tools.nsc.{Global, Phase}
+import scala.tools.nsc.{Global, Phase, Properties}
 import scala.util.matching.Regex
 
 class SilencerPlugin(val global: Global) extends Plugin { plugin =>
@@ -17,6 +17,9 @@ class SilencerPlugin(val global: Global) extends Plugin { plugin =>
   val name = "silencer"
   val description = "Scala compiler plugin for warning suppression"
   val components: List[PluginComponent] = List(extractSuppressions, checkUnusedSuppressions)
+
+  private final val InitDefault1 = TermName("<init>$default$1").encodedName
+  private val scala213: Boolean = Properties.versionNumberString.startsWith("2.13")
 
   private val globalFilters = ListBuffer.empty[Regex]
   private val lineContentFilters = ListBuffer.empty[Regex]
@@ -70,39 +73,58 @@ class SilencerPlugin(val global: Global) extends Plugin { plugin =>
     val phaseName = "silencer"
     override def description: String = "inspect @silent annotations for warning suppression"
 
-    private lazy val silentSym = try rootMirror.staticClass("com.github.ghik.silencer.silent") catch {
-      case _: ScalaReflectionException =>
-        if (globalFilters.isEmpty && pathFilters.isEmpty) {
-          plugin.reporter.warning(NoPosition,
-            "`silencer-plugin` was enabled but the @silent annotation was not found on classpath" +
-              " - have you added `silencer-lib` as a library dependency?"
-          )
-        }
-        NoSymbol
-    }
+    private lazy val silentSym =
+      try rootMirror.staticClass("com.github.ghik.silencer.silent") catch {
+        case _: ScalaReflectionException => NoSymbol
+      }
 
-    def newPhase(prev: Phase): StdPhase = new StdPhase(prev) {
-      def apply(unit: CompilationUnit): Unit = applySuppressions(unit)
+    private lazy val compatNowarnSym =
+      if (scala213) NoSymbol // leave @nowarn to be processed by scalac
+      else try rootMirror.staticClass("scala.annotation.nowarn") catch {
+        case _: ScalaReflectionException => NoSymbol
+      }
+
+    def newPhase(prev: Phase): StdPhase = {
+      if (silentSym == NoSymbol && compatNowarnSym == NoSymbol && globalFilters.isEmpty && pathFilters.isEmpty) {
+        plugin.reporter.warning(NoPosition,
+          "`silencer-plugin` was enabled but @silent annotation was not found on classpath" +
+            " - have you added `silencer-lib` as a library dependency?"
+        )
+      }
+
+      new StdPhase(prev) {
+        def apply(unit: CompilationUnit): Unit = applySuppressions(unit)
+      }
     }
 
     def applySuppressions(unit: CompilationUnit): Unit = {
-      val suppressions = if (silentSym == NoSymbol) Nil else {
-        val silentAnnotType = TypeRef(NoType, silentSym, Nil)
-        def isSilentAnnot(tree: Tree) =
-          tree.tpe != null && tree.tpe <:< silentAnnotType
-
+      val suppressions = if (silentSym == NoSymbol && compatNowarnSym == NoSymbol) Nil else {
         def mkSuppression(tree: Tree, annot: Tree, annotPos: Position, inMacroExpansion: Boolean): Suppression = {
+          val annotSym = annot.tpe.typeSymbol
           val range = treeRangePos(tree)
           val msgPattern = annot match {
             case Apply(_, Nil) => None
-            case Apply(_, List(Literal(Constant(regex: String)))) =>
-              try Some(regex.r) catch {
-                case pse: PatternSyntaxException =>
-                  reporter.error(annotPos, s"invalid message pattern $regex in @silent annotation: ${pse.getMessage}")
-                  None
+            case Apply(_, List(Literal(Constant(arg: String)))) =>
+              // partial support for Scala 2.13.2 @nowarn annotation
+              // only interpreting the 'msg' filter, other filters simply suppress everything
+              val regexOpt =
+                if (annotSym == compatNowarnSym)
+                  arg.split("&").iterator.filter(_.startsWith("msg=")).map(_.substring(4)).toList.headOption
+                else
+                  Some(arg)
+
+              regexOpt.flatMap { regex =>
+                try Some(regex.r) catch {
+                  case pse: PatternSyntaxException =>
+                    reporter.error(annotPos, s"invalid message pattern $regex in @${annotSym.nameString} annotation: ${pse.getMessage}")
+                    None
+                }
               }
+            case Apply(_, List(Select(pref, InitDefault1)))
+              if annotSym == compatNowarnSym && pref.symbol == compatNowarnSym.companion =>
+              None
             case _ =>
-              reporter.error(annotPos, "expected literal string as @silent annotation argument")
+              reporter.error(annotPos, s"expected literal string as @${annotSym.nameString} annotation argument")
               None
           }
           new Suppression(annotPos, range, msgPattern, inMacroExpansion)
@@ -131,7 +153,10 @@ class SilencerPlugin(val global: Global) extends Plugin { plugin =>
 
           private def addSuppression(tree: Tree, annot: Tree, annotPos: Position): Unit = {
             val actualAnnotPos = if (annotPos != NoPosition) annotPos else tree.pos
-            if (isSilentAnnot(annot) && suppressionPositionsVisited.add(actualAnnotPos.point)) {
+            val annotSym = annot.tpe.typeSymbol
+            if (annotSym != NoSymbol && (annotSym == silentSym || annotSym == compatNowarnSym) &&
+              suppressionPositionsVisited.add(actualAnnotPos.point)
+            ) {
               suppressionsBuf += mkSuppression(tree, annot, actualAnnotPos, inMacroExpansion)
             }
           }
@@ -182,7 +207,7 @@ class SilencerPlugin(val global: Global) extends Plugin { plugin =>
     val runsAfter = List("jvm")
     override val runsBefore = List("terminal")
     val phaseName = "silencerCheckUnused"
-    override def description: String = "report unused @silent annotations"
+    override def description: String = "report unused @silent/@nowarn annotations"
 
     def newPhase(prev: Phase): StdPhase = new StdPhase(prev) {
       def apply(unit: CompilationUnit): Unit =
