@@ -88,6 +88,9 @@ class AnnotationSuppressionTest extends SilencerPluginTest {
   test("message patterns") {
     testFile("messagePatterns.scala", 1)
   }
+  test("@nowarn support") {
+    testFile("nowarnSupport.scala", 2)
+  }
 
   test("multiple files compilation") {
     compile("unsuppressed.scala", "statementSuppression.scala", "localValueSuppression.scala")
