@@ -47,7 +47,8 @@ to be cross compiled for them.
 
 ## Annotation-based suppression
 
-With the plugin enabled, warnings can be suppressed using the `@com.github.ghik.silencer.silent` annotation. 
+With the plugin enabled, warnings can be suppressed using the `@com.github.ghik.silencer.silent` 
+or `@scala.annotation.nowarn` annotation. 
 It can be applied on a single statement or expression, entire `def`/`val`/`var` definition or entire 
 `class`/`object`/`trait` definition.
 
@@ -70,6 +71,12 @@ def usesDeprecatedApi(): Unit = {
   someDeprecatedApi("something")
 }
 ```
+
+### Using `@nowarn`
+
+Scala 2.13.2 introduced [configurable warnings]() using `-Wconf` compiler option and `@scala.annotation.nowarn`.
+annotation. For Scala 2.11 and 2.12, you can use [scala-collection-compat](https://github.com/scala/scala-collection-compat)
+to have this annotation on your classpath. 
 
 ### Detecting unused annotations
 

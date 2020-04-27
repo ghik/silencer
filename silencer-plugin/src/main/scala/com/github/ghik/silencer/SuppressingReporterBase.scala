@@ -40,7 +40,7 @@ trait SuppressingReporterBase { self: Reporter =>
 
   protected def matchesLineContentFilter(pos: Position): Boolean =
     lineContentFilters.nonEmpty && pos.isDefined &&
-      anyMatches(lineContentFilters, pos.source.lines(pos.line - 1).next())
+      anyMatches(lineContentFilters, pos.source.lineToString(pos.line - 1))
 
   protected def anyMatches(patterns: List[Regex], value: String): Boolean =
     patterns.exists(_.findFirstIn(value).isDefined)

@@ -19,21 +19,27 @@ credentials in Global += Credentials(
 version in ThisBuild :=
   sys.env.get("TRAVIS_TAG").filter(_.startsWith("v")).map(_.drop(1)).getOrElse("1.5-SNAPSHOT")
 
-val commonSettings = Seq(
-  organization := "com.github.ghik",
-  scalaVersion := "2.13.2",
-  crossVersion := CrossVersion.full,
-  crossScalaVersions := Seq("2.12.8", "2.12.9", "2.12.10", "2.12.11", scalaVersion.value),
-  unmanagedSourceDirectories in Compile ++= {
-    (unmanagedSourceDirectories in Compile).value.map { dir =>
-      val sv = scalaVersion.value
-      val is130 = sv == "2.13.0" // use 2.12 version for 2.13.0, reporters changed in 2.13.1
-      CrossVersion.partialVersion(sv) match {
-        case Some((2, n)) if n < 13 || is130 => file(dir.getPath ++ "-2.12-")
-        case _ => file(dir.getPath ++ "-2.13+")
-      }
+def crossSources = Def.settings(
+  unmanagedSourceDirectories ++= unmanagedSourceDirectories.value.flatMap { dir =>
+    val path = dir.getPath
+    val sv = scalaVersion.value
+    val suffixes = CrossVersion.partialVersion(sv) match {
+      case Some((2, 11)) => Seq("2.11", "2.11-12")
+      case Some((2, 12)) => Seq("2.11-12", "2.12", "2.12-13")
+      case Some((2, 13)) => Seq("2.12-13", "2.13")
+      case _ => throw new IllegalArgumentException("unsupported scala version")
     }
-  },
+    suffixes.map(s => file(s"$path-$s"))
+  }
+)
+
+val commonSettings = Def.settings(
+  organization := "com.github.ghik",
+  scalaVersion := crossScalaVersions.value.head,
+  crossVersion := CrossVersion.full,
+  crossScalaVersions := Seq("2.13.2", "2.12.11", "2.11.12"),
+  inConfig(Compile)(crossSources),
+  inConfig(Test)(crossSources),
   projectInfo := ModuleInfo(
     nameFormal = "Silencer",
     description = "Scala compiler plugin for annotation-based warning suppression",
@@ -55,7 +61,8 @@ val commonSettings = Seq(
   )
 )
 
-val subprojectSettings = commonSettings ++ Seq(
+val subprojectSettings = Def.settings(
+  commonSettings,
   publishMavenStyle := true,
   pomIncludeRepository := { _ => false },
   publishTo := sonatypePublishToBundle.value,

@@ -17,7 +17,7 @@ abstract class SilencerPluginTest(options: String*) extends FunSuite { suite =>
   val settings = new Settings
 
   settings.deprecation.value = true
-  settings.warnUnused.enable(settings.UnusedWarnings.Imports)
+  CrossTestUtils.enableUnusedImports(settings)
   settings.pluginOptions.value = settings.pluginOptions.value ++ options.map(o => s"silencer:$o")
 
   Option(getClass.getResourceAsStream("/embeddedcp")) match {
