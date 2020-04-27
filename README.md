@@ -3,10 +3,13 @@
 [![Build Status](https://travis-ci.org/ghik/silencer.svg?branch=master)](https://travis-ci.org/ghik/silencer)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.ghik/silencer-plugin_2.13.0/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.github.ghik/silencer-plugin_2.13.0)
 
-Scala has no local warning suppression (see e.g. [scala/bug/issues/1781](https://github.com/scala/bug/issues/1781) 
-for discussion). This plugin aims to change the situation. The direct motivation for this plugin is to be able to 
-turn on `-Xfatal-warnings` option in Scala compiler and enforce zero-warning policy but still be able to consciously 
-silent out warnings which would otherwise be a pointless noise.
+**NOTE**: Scala 2.13.2 introduced [configurable warnings](https://github.com/scala/scala/pull/8373).
+This means that if you're using Scala 2.13 only, this plugin is obsolete and you should use
+[`@nowarn`](https://www.scala-lang.org/api/current/scala/annotation/nowarn.html).
+
+If you're using Scala 2.11/2.12 or cross-compiling for them then this plugin can be used in conjunction with
+[scala-collection-compat](https://github.com/scala/scala-collection-compat) in order to suppress warnings in all 
+Scala versions using `@nowarn`.
 
 ## Setup
 
@@ -74,9 +77,14 @@ def usesDeprecatedApi(): Unit = {
 
 ### Using `@nowarn`
 
-Scala 2.13.2 introduced [configurable warnings]() using `-Wconf` compiler option and `@scala.annotation.nowarn`.
-annotation. For Scala 2.11 and 2.12, you can use [scala-collection-compat](https://github.com/scala/scala-collection-compat)
-to have this annotation on your classpath. 
+Scala 2.13.2 introduced [configurable warnings](https://github.com/scala/scala/pull/8373) using `-Wconf` compiler option 
+and `@scala.annotation.nowarn`. annotation. For Scala 2.11 and 2.12, this annotation is provided by the 
+[scala-collection-compat](https://github.com/scala/scala-collection-compat) library and interpreted by the `silencer`
+plugin.
+
+**NOTE**: `@nowarn` in Scala 2.13.2 supports various fine-grained filters (e.g. warning category, message patttern, etc.).
+Silencer only supports the `msg=<pattern>` filter - all other filters simply suppress everything, as if there were
+no filters specified.
 
 ### Detecting unused annotations
 
