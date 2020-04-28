@@ -1,7 +1,7 @@
 # Silencer: Scala compiler plugin for warning suppression
 
 [![Build Status](https://travis-ci.org/ghik/silencer.svg?branch=master)](https://travis-ci.org/ghik/silencer)
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.ghik/silencer-plugin_2.13.0/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.github.ghik/silencer-plugin_2.13.0)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.ghik/silencer-plugin_2.13.2/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.github.ghik/silencer-plugin_2.13.2)
 
 **NOTE**: Scala 2.13.2 introduced [configurable warnings](https://github.com/scala/scala/pull/8373).
 This means that if you're using Scala 2.13 only, this plugin is obsolete and you should use
