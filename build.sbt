@@ -37,7 +37,7 @@ val commonSettings = Def.settings(
   organization := "com.github.ghik",
   scalaVersion := crossScalaVersions.value.head,
   crossVersion := CrossVersion.full,
-  crossScalaVersions := Seq("2.13.2", "2.12.11", "2.11.12"),
+  crossScalaVersions := Seq("2.13.2", "2.13.1", "2.12.11", "2.11.12"),
   inConfig(Compile)(crossSources),
   inConfig(Test)(crossSources),
   projectInfo := ModuleInfo(
