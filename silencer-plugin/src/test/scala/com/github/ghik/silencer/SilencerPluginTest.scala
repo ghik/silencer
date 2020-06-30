@@ -2,7 +2,7 @@ package com.github.ghik.silencer
 
 import java.io.File
 
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 
 import scala.io.Source
 import scala.reflect.io.VirtualDirectory
@@ -11,7 +11,7 @@ import scala.tools.nsc.reporters.ConsoleReporter
 import scala.tools.nsc.{Global, Settings}
 import scala.util.Properties
 
-abstract class SilencerPluginTest(options: String*) extends FunSuite { suite =>
+abstract class SilencerPluginTest(options: String*) extends AnyFunSuite { suite =>
 
   val testdata = "silencer-plugin/testdata/"
   val settings = new Settings
