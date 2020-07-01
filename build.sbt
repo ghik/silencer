@@ -1,4 +1,3 @@
-
 name := "silencer"
 
 val saveTestClasspath = taskKey[File](
@@ -89,7 +88,7 @@ lazy val `silencer-plugin` = project.dependsOn(`silencer-lib`)
   .settings(
     libraryDependencies ++= Seq(
       "org.scala-lang" % "scala-compiler" % scalaVersion.value,
-      "org.scalatest" %% "scalatest" % "3.0.8" % Test
+      "org.scalatest" %% "scalatest-funsuite" % "3.2.0" % Test
     ),
     resourceGenerators in Test += Def.task {
       val result = (resourceManaged in Test).value / "embeddedcp"
