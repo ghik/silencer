@@ -54,10 +54,6 @@ abstract class SilencerPluginTest(options: String*) extends AnyFunSuite { suite 
     assertErrors(expectedErrors)
     assertWarnings(expectedWarnings)
   }
-
-  // looks like macro args are not linted at all in 2.13
-  val macroExpandeeWarnings: Int =
-    if (Properties.versionString.contains("2.13")) 0 else 1
 }
 
 class AnnotationSuppressionTest extends SilencerPluginTest {
@@ -81,9 +77,6 @@ class AnnotationSuppressionTest extends SilencerPluginTest {
   }
   test("late warning") {
     testFile("lateWarning.scala", 1)
-  }
-  test("macro expandee") {
-    testFile("macroExpandeeSuppression.scala", macroExpandeeWarnings)
   }
   test("message patterns") {
     testFile("messagePatterns.scala", 1)
