@@ -152,6 +152,7 @@ class SilencerPlugin(val global: Global) extends Plugin { plugin =>
           private var inMacroExpansion: Boolean = false
 
           private def addSuppression(tree: Tree, annot: Tree, annotPos: Position): Unit = {
+            if (annot.tpe eq null) return // issue #56
             val actualAnnotPos = if (annotPos != NoPosition) annotPos else tree.pos
             val annotSym = annot.tpe.typeSymbol
             if (annotSym != NoSymbol && (annotSym == silentSym || annotSym == compatNowarnSym) &&
