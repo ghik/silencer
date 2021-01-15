@@ -19,7 +19,7 @@ class SilencerPlugin(val global: Global) extends Plugin { plugin =>
   val components: List[PluginComponent] = List(extractSuppressions, checkUnusedSuppressions)
 
   private final val InitDefault1 = TermName("<init>$default$1").encodedName
-  private val scala213: Boolean = Properties.versionNumberString.startsWith("2.13")
+  private val scala211: Boolean = Properties.versionNumberString.startsWith("2.11")
 
   private val globalFilters = ListBuffer.empty[Regex]
   private val lineContentFilters = ListBuffer.empty[Regex]
@@ -79,7 +79,7 @@ class SilencerPlugin(val global: Global) extends Plugin { plugin =>
       }
 
     private lazy val compatNowarnSym =
-      if (scala213) NoSymbol // leave @nowarn to be processed by scalac
+      if (!scala211) NoSymbol // leave @nowarn to be processed by scalac
       else try rootMirror.staticClass("scala.annotation.nowarn") catch {
         case _: ScalaReflectionException => NoSymbol
       }
