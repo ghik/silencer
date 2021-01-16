@@ -3,11 +3,11 @@
 [![Build Status](https://travis-ci.org/ghik/silencer.svg?branch=master)](https://travis-ci.org/ghik/silencer)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.ghik/silencer-plugin_2.13.2/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.github.ghik/silencer-plugin_2.13.2)
 
-**NOTE**: Scala 2.13.2 introduced [configurable warnings](https://github.com/scala/scala/pull/8373).
-This means that if you're using Scala 2.13 only, this plugin is obsolete and you should use
+**NOTE**: Scala 2.13.2 and 2.12.13 introduced [configurable warnings](https://github.com/scala/scala/pull/8373).
+This means that unless you're still cross compiling for Scala 2.11, this plugin is obsolete, and you should use
 [`@nowarn`](https://www.scala-lang.org/api/current/scala/annotation/nowarn.html).
 
-If you're using Scala 2.11/2.12 or cross-compiling for them then this plugin can be used in conjunction with
+If you're still cross compiling for 2.11 then this plugin can be used in conjunction with
 [scala-collection-compat](https://github.com/scala/scala-collection-compat) in order to suppress warnings in all 
 Scala versions using `@nowarn`.
 
@@ -16,7 +16,7 @@ Scala versions using `@nowarn`.
 If you're using SBT, add this to your project definition:
 
 ```scala
-libraryDependencies ++= Seq(
+ThisBuild / libraryDependencies ++= Seq(
   compilerPlugin("com.github.ghik" % "silencer-plugin" % silencerVersion cross CrossVersion.full),
   "com.github.ghik" % "silencer-lib" % silencerVersion % Provided cross CrossVersion.full
 )
@@ -44,9 +44,8 @@ tasks.withType(ScalaCompile) {
 }
 ```
     
-Silencer currently works with Scala 2.12.0+ and 2.13.0-M4+. Also note that since both `silencer-plugin` and 
-`silencer-lib` are compile time only dependencies, Silencer can also be used in ScalaJS and Scala Native without having 
-to be cross compiled for them.
+Note that since both `silencer-plugin` and `silencer-lib` are compile time only dependencies, Silencer can be used 
+in ScalaJS and Scala Native without having to be cross compiled for them.
 
 ## Annotation-based suppression
 
@@ -77,8 +76,8 @@ def usesDeprecatedApi(): Unit = {
 
 ### Using `@nowarn`
 
-Scala 2.13.2 introduced [configurable warnings](https://github.com/scala/scala/pull/8373) using `-Wconf` compiler option 
-and `@scala.annotation.nowarn`. annotation. For Scala 2.11 and 2.12, this annotation is provided by the 
+Scala 2.13.2 and 2.12.13 introduced [configurable warnings](https://github.com/scala/scala/pull/8373) using `-Wconf` 
+compiler option and `@scala.annotation.nowarn`. annotation. For Scala 2.11, this annotation is provided by the 
 [scala-collection-compat](https://github.com/scala/scala-collection-compat) library and interpreted by the `silencer`
 plugin.
 
