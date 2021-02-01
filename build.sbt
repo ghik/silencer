@@ -20,7 +20,6 @@ def crossSources = Def.settings(
 inThisBuild(Seq(
   organization := "com.github.ghik",
   scalaVersion := crossScalaVersions.value.head,
-  crossVersion := CrossVersion.full,
   crossScalaVersions := Seq("2.13.4", "2.13.3", "2.13.2", "2.12.13", "2.11.12"),
 
   projectInfo := ModuleInfo(
@@ -59,6 +58,7 @@ inThisBuild(Seq(
 ))
 
 val commonSettings = Def.settings(
+  crossVersion := CrossVersion.full,
   inConfig(Compile)(crossSources),
   inConfig(Test)(crossSources),
 )
