@@ -10,7 +10,7 @@ import scala.tools.nsc.plugins.{Plugin, PluginComponent}
 import scala.tools.nsc.{Global, Phase, Properties}
 import scala.util.matching.Regex
 
-class SilencerPlugin(val global: Global) extends Plugin { plugin =>
+class SilencerPlugin(val global: Global) extends Plugin with SilencerPluginCompat { plugin =>
 
   import global._
 
@@ -104,7 +104,7 @@ class SilencerPlugin(val global: Global) extends Plugin { plugin =>
           val range = treeRangePos(tree)
           val msgPattern = annot match {
             case Apply(_, Nil) => None
-            case Apply(_, List(Literal(Constant(arg: String)))) =>
+            case Apply(_, List(MaybeNamedArg(Literal(Constant(arg: String))))) =>
               // partial support for Scala 2.13.2 @nowarn annotation
               // only interpreting the 'msg' filter, other filters simply suppress everything
               val regexOpt =
