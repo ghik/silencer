@@ -5,7 +5,7 @@ trait SilencerPluginCompat { this: SilencerPlugin =>
 
   protected object MaybeNamedArg {
     def unapply(tree: Tree): OptRef[Tree] = tree match {
-      case Assign(_, rhs) => OptRef(rhs)
+      case NamedArg(_, rhs) => OptRef(rhs)
       case _ => OptRef(tree)
     }
   }
