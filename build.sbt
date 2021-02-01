@@ -3,21 +3,6 @@ name := "silencer"
 val saveTestClasspath = taskKey[File](
   "Saves test classpath to a file so that it can be used by embedded scalac in tests")
 
-useGpg := false // TODO: use sbt-ci-release
-pgpPublicRing := file("./travis/local.pubring.asc")
-pgpSecretRing := file("./travis/local.secring.asc")
-pgpPassphrase := sys.env.get("PGP_PASSPHRASE").map(_.toCharArray)
-
-credentials in Global += Credentials(
-  "Sonatype Nexus Repository Manager",
-  "oss.sonatype.org",
-  sys.env.getOrElse("SONATYPE_USERNAME", ""),
-  sys.env.getOrElse("SONATYPE_PASSWORD", "")
-)
-
-version in ThisBuild :=
-  sys.env.get("TRAVIS_TAG").filter(_.startsWith("v")).map(_.drop(1)).getOrElse("1.5-SNAPSHOT")
-
 def crossSources = Def.settings(
   unmanagedSourceDirectories ++= unmanagedSourceDirectories.value.flatMap { dir =>
     val path = dir.getPath
@@ -32,13 +17,12 @@ def crossSources = Def.settings(
   }
 )
 
-val commonSettings = Def.settings(
+inThisBuild(Seq(
   organization := "com.github.ghik",
   scalaVersion := crossScalaVersions.value.head,
   crossVersion := CrossVersion.full,
   crossScalaVersions := Seq("2.13.4", "2.13.3", "2.13.2", "2.12.13", "2.11.12"),
-  inConfig(Compile)(crossSources),
-  inConfig(Test)(crossSources),
+
   projectInfo := ModuleInfo(
     nameFormal = "Silencer",
     description = "Scala compiler plugin for annotation-based warning suppression",
@@ -57,7 +41,26 @@ val commonSettings = Def.settings(
     developers = Vector(
       Developer("ghik", "Roman Janusz", "romeqjanoosh@gmail.com", url("https://github.com/ghik"))
     ),
-  )
+  ),
+
+  githubWorkflowTargetTags ++= Seq("v*"),
+  githubWorkflowJavaVersions := Seq("adopt@1.11"),
+  githubWorkflowPublishTargetBranches := Seq(RefPredicate.StartsWith(Ref.Tag("v"))),
+
+  githubWorkflowPublish := Seq(WorkflowStep.Sbt(
+    List("ci-release"),
+    env = Map(
+      "PGP_PASSPHRASE" -> "${{ secrets.PGP_PASSPHRASE }}",
+      "PGP_SECRET" -> "${{ secrets.PGP_SECRET }}",
+      "SONATYPE_PASSWORD" -> "${{ secrets.SONATYPE_PASSWORD }}",
+      "SONATYPE_USERNAME" -> "${{ secrets.SONATYPE_USERNAME }}"
+    )
+  )),
+))
+
+val commonSettings = Def.settings(
+  inConfig(Compile)(crossSources),
+  inConfig(Test)(crossSources),
 )
 
 val subprojectSettings = Def.settings(
