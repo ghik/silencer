@@ -85,15 +85,16 @@ class SilencerPlugin(val global: Global) extends Plugin with SilencerPluginCompa
       }
 
     def newPhase(prev: Phase): StdPhase = {
-      if (silentSym == NoSymbol && compatNowarnSym == NoSymbol && globalFilters.isEmpty && pathFilters.isEmpty) {
-        plugin.reporter.warning(NoPosition,
-          "`silencer-plugin` was enabled but @silent annotation was not found on classpath" +
-            " - have you added `silencer-lib` as a library dependency?"
-        )
-      }
-
       new StdPhase(prev) {
-        def apply(unit: CompilationUnit): Unit = applySuppressions(unit)
+        def apply(unit: CompilationUnit): Unit = {
+          if (silentSym == NoSymbol && compatNowarnSym == NoSymbol && globalFilters.isEmpty && pathFilters.isEmpty) {
+            plugin.reporter.warning(NoPosition,
+              "`silencer-plugin` was enabled but @silent annotation was not found on classpath" +
+                " - have you added `silencer-lib` as a library dependency?"
+            )
+          }
+          applySuppressions(unit)
+        }
       }
     }
 
