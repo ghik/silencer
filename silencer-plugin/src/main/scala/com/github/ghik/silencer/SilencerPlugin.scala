@@ -84,17 +84,18 @@ class SilencerPlugin(val global: Global) extends Plugin with SilencerPluginCompa
         case _: ScalaReflectionException => NoSymbol
       }
 
-    def newPhase(prev: Phase): StdPhase = {
+    private lazy val checkAnnotation: Unit = {
       if (silentSym == NoSymbol && compatNowarnSym == NoSymbol && globalFilters.isEmpty && pathFilters.isEmpty) {
         plugin.reporter.warning(NoPosition,
           "`silencer-plugin` was enabled but @silent annotation was not found on classpath" +
             " - have you added `silencer-lib` as a library dependency?"
         )
       }
+    }
 
-      new StdPhase(prev) {
-        def apply(unit: CompilationUnit): Unit = applySuppressions(unit)
-      }
+    def newPhase(prev: Phase): StdPhase = new StdPhase(prev) {
+      override def run(): Unit = { checkAnnotation: Unit; super.run() }
+      def apply(unit: CompilationUnit): Unit = applySuppressions(unit)
     }
 
     def applySuppressions(unit: CompilationUnit): Unit = {
