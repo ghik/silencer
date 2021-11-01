@@ -20,7 +20,7 @@ def crossSources = Def.settings(
 inThisBuild(Seq(
   organization := "com.github.ghik",
   scalaVersion := crossScalaVersions.value.head,
-  crossScalaVersions := Seq("2.13.6", "2.13.5", "2.13.4", "2.13.3", "2.13.2", "2.12.15", "2.12.14", "2.12.13", "2.11.12"),
+  crossScalaVersions := Seq("2.13.7", "2.13.6", "2.13.5", "2.13.4", "2.13.3", "2.13.2", "2.12.15", "2.12.14", "2.12.13", "2.11.12"),
 
   githubWorkflowTargetTags ++= Seq("v*"),
   githubWorkflowJavaVersions := Seq("adopt@1.11"),
