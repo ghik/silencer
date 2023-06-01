@@ -33,6 +33,7 @@ jobs:
           - 2.13.4
           - 2.13.3
           - 2.13.2
+          - 2.12.18
           - 2.12.17
           - 2.12.16
           - 2.12.15
@@ -201,6 +202,16 @@ jobs:
         run: |
           tar xf targets.tar
           rm targets.tar
+
+      - name: Download target directories (2.12.18)
+        uses: actions/download-artifact@v2
+        with:
+          name: target-${{ matrix.os }}-2.12.18-${{ matrix.java }}
+
+      - name: Inflate target directories (2.12.18)
+        run: |
+          tar xf targets.tar
+          rm targets.tar    
 
       - name: Download target directories (2.12.17)
         uses: actions/download-artifact@v2
