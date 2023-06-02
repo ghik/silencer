@@ -24,7 +24,7 @@ inThisBuild(Seq(
     "2.12.18", "2.12.17", "2.12.16", "2.12.15", "2.12.14", "2.12.13", "2.11.12"),
 
   githubWorkflowTargetTags ++= Seq("v*"),
-  githubWorkflowJavaVersions := Seq("adopt@1.11"),
+  githubWorkflowJavaVersions := Seq(JavaSpec.temurin("17")),
   githubWorkflowPublishTargetBranches := Seq(RefPredicate.StartsWith(Ref.Tag("v"))),
 
   githubWorkflowPublish := Seq(WorkflowStep.Sbt(
