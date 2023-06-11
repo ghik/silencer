@@ -44,6 +44,8 @@ jobs:
         java: [temurin@17]
     runs-on: ${{ matrix.os }}
     steps:
+      - run: gpg --list-keys # See https://stackoverflow.com/a/68573147/2431728
+      
       - name: Checkout current branch (full)
         uses: actions/checkout@v2
         with:
