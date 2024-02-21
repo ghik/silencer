@@ -21,7 +21,7 @@ inThisBuild(Seq(
   organization := "com.github.ghik",
   scalaVersion := crossScalaVersions.value.head,
   crossScalaVersions := Seq("2.13.12", "2.13.11", "2.13.10", "2.13.9", "2.13.8", "2.13.7", "2.13.6", "2.13.5", "2.13.4", "2.13.3", "2.13.2",
-    "2.12.18", "2.12.17", "2.12.16", "2.12.15", "2.12.14", "2.12.13", "2.11.12"),
+    "2.12.19", "2.12.18", "2.12.17", "2.12.16", "2.12.15", "2.12.14", "2.12.13", "2.11.12"),
 
   githubWorkflowTargetTags ++= Seq("v*"),
   githubWorkflowJavaVersions := Seq(JavaSpec.temurin("17")),
@@ -72,14 +72,14 @@ val subprojectSettings = Def.settings(
 )
 
 lazy val silencer = (project in file(".")).aggregate(`silencer-lib`, `silencer-plugin`)
-  .settings(commonSettings: _*)
+  .settings(commonSettings*)
   .settings(
     publishArtifact := false,
     PgpKeys.publishSigned := {}
   )
 
 lazy val `silencer-lib` = project
-  .settings(subprojectSettings: _*)
+  .settings(subprojectSettings*)
   .settings(
     libraryDependencies ++= Seq(
       "org.scala-lang" % "scala-reflect" % scalaVersion.value % Test,
@@ -88,17 +88,17 @@ lazy val `silencer-lib` = project
   )
 
 lazy val `silencer-plugin` = project.dependsOn(`silencer-lib`)
-  .settings(subprojectSettings: _*)
+  .settings(subprojectSettings*)
   .settings(
     libraryDependencies ++= Seq(
       "org.scala-lang" % "scala-compiler" % scalaVersion.value,
       "org.scalatest" %% "scalatest-funsuite" % "3.2.0" % Test
     ),
-    resourceGenerators in Test += Def.task {
-      val result = (resourceManaged in Test).value / "embeddedcp"
-      IO.write(result, (fullClasspath in `silencer-lib` in Test).value.map(_.data.getAbsolutePath).mkString("\n"))
+    Test / resourceGenerators += Def.task {
+      val result = (Test / resourceManaged).value / "embeddedcp"
+      IO.write(result, (`silencer-lib` / Test / fullClasspath).value.map(_.data.getAbsolutePath).mkString("\n"))
       Seq(result)
     }.taskValue,
-    fork in Test := true,
-    baseDirectory in Test := (baseDirectory in ThisBuild).value,
+    Test / fork := true,
+    Test / baseDirectory := (ThisBuild / baseDirectory).value,
   )
