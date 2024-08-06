@@ -81,7 +81,7 @@ compiler option and `@scala.annotation.nowarn`. annotation. For Scala 2.11, this
 [scala-collection-compat](https://github.com/scala/scala-collection-compat) library and interpreted by the `silencer`
 plugin.
 
-**NOTE**: `@nowarn` in Scala 2.13.2 supports various fine-grained filters (e.g. warning category, message patttern, etc.).
+**NOTE**: `@nowarn` in Scala 2.13.2 supports various fine-grained filters (e.g. warning category, message pattern, etc.).
 Silencer only supports the `msg=<pattern>` filter - all other filters simply suppress everything, as if there were
 no filters specified.
 
