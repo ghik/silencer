@@ -3,6 +3,10 @@
 [![Build Status](https://travis-ci.org/ghik/silencer.svg?branch=master)](https://travis-ci.org/ghik/silencer)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.ghik/silencer-plugin_2.13.2/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.github.ghik/silencer-plugin_2.13.2)
 
+## Compatibility
+
+Silencer is available for Scala 2.11, 2.12, and 2.13.
+
 **NOTE**: Scala 2.13.2 and 2.12.13 introduced [configurable warnings](https://github.com/scala/scala/pull/8373).
 This means that unless you're still cross compiling for Scala 2.11, this plugin is obsolete, and you should use
 [`@nowarn`](https://www.scala-lang.org/api/current/scala/annotation/nowarn.html).
@@ -10,6 +14,18 @@ This means that unless you're still cross compiling for Scala 2.11, this plugin 
 If you're still cross compiling for 2.11 then this plugin can be used in conjunction with
 [scala-collection-compat](https://github.com/scala/scala-collection-compat) in order to suppress warnings in all 
 Scala versions using `@nowarn`.
+
+As a compiler plugin, Silencer must be separately built for every minor version of Scala. If you find that Silencer is not
+available for your version of Scala (most likely some newly released one), please contribute - the instructions on how to do it are below :)
+
+### How to add support for a new version of Scala
+
+1. Fork and clone the repository.
+1. Edit `build.sbt` and add the new Scala version to `crossScalaVersions`. Make sure to keep the order of the list,
+   which should start with the newest version.
+1. Invoke `sbt githubWorkflowGenerate`
+1. Commit changes in `build.sbt` and Github workflow definitions
+1. Make a PR :)
 
 ## Setup
 
