@@ -24,6 +24,7 @@ jobs:
       matrix:
         os: [ubuntu-latest]
         scala:
+          - 2.13.15
           - 2.13.14
           - 2.13.13
           - 2.13.12
@@ -94,7 +95,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        scala: [2.13.14]
+        scala: [2.13.15]
         java: [temurin@17]
     runs-on: ${{ matrix.os }}
     steps:
@@ -121,6 +122,16 @@ jobs:
             ~/AppData/Local/Coursier/Cache/v1
             ~/Library/Caches/Coursier/v1
           key: ${{ runner.os }}-sbt-cache-v2-${{ hashFiles('**/*.sbt') }}-${{ hashFiles('project/build.properties') }}
+
+      - name: Download target directories (2.13.15)
+        uses: actions/download-artifact@v2
+        with:
+          name: target-${{ matrix.os }}-2.13.15-${{ matrix.java }}
+
+      - name: Inflate target directories (2.13.15)
+        run: |
+          tar xf targets.tar
+          rm targets.tar
 
       - name: Download target directories (2.13.14)
         uses: actions/download-artifact@v2
