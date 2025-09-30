@@ -70,7 +70,6 @@ val subprojectSettings = Def.settings(
   commonSettings,
   publishMavenStyle := true,
   pomIncludeRepository := { _ => false },
-  publishTo := sonatypePublishToBundle.value,
 )
 
 lazy val silencer = (project in file(".")).aggregate(`silencer-lib`, `silencer-plugin`)
